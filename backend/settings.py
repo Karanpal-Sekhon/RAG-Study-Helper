@@ -60,12 +60,12 @@ ROOT_URLCONF = "backend.urls"
 
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'backend', 'static')]
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Add template directory
+        'DIRS': [os.path.join(BASE_DIR, 'backend', 'templates')],  # Correct path for templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

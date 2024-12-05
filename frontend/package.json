@@ -13,8 +13,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build && cp -r build/* ../backend/static/"
+      "start": "react-scripts start",
+      "build": "react-scripts build && xcopy /E /Y build\\* ..\\backend\\static\\"
   },
   "eslintConfig": {
     "extends": [
