@@ -1,0 +1,25 @@
+# Backend dependencies
+Django>=4.0,<5.0
+djangorestframework>=3.14,<4.0
+django-cors-headers>=3.13,<4.0
+psycopg2>=2.9,<3.0
+gunicorn>=20.1,<21.0  # For deployment
+
+# Material processing dependencies
+openai-whisper>=1.0.0  # For speech-to-text
+pytesseract>=0.3.10  # For OCR
+boto3>=1.26.0  # AWS Textract for OCR (if required)
+langchain>=0.0.170  # For content indexing and NLP workflows
+
+# Frontend support (if necessary for SSR or API communication)
+django-webpack-loader>=1.8,<2.0
+
+# Testing and development tools
+pytest>=7.2,<8.0
+pytest-django>=4.5,<5.0
+black>=23.0,<24.0
+isort>=5.10,<6.0
+
+# Deployment and security
+django-environ>=0.9,<1.0  # For managing environment variables
+whitenoise>=6.4,<7.0  # For serving static files in production
