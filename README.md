@@ -1,1 +1,1 @@
-"# RAG Study Helper" 
+# RAG Study Helper
