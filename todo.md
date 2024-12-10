@@ -1,24 +1,17 @@
 # TODO
 
-1. Work on models required, what do we need?
-   - User model
-     - username (str)
-     - password (pass)
-     - email (str)
-     - workspaces (Workspace)
-     - profile image
-   - Workspace
-     - Notes (Group of Note)
-     - Videos (Group of videos)
-   - Note
-     - PDFs of notes
-     - Parse them into text
-   - Video
-     - Transcript the video
-     - store the text
-2. Work on Frontend
-   - Fix the home page logic
-   - Logout button and User Profile
-   - Handle Add Workspace
-   - Handle Delete Workspace
-   - Do overall QA to make sure ui is functional at the very least
+1. work on apis (design them)
+
+- update each of the urls, and the views for each url. Construct them yourself, you know more than GPT! (trust)
+- Creating a Workspace
+- Getting a Workspace
+- Updating a Workspace
+- Getting a note
+- Getting a video
+
+2. implement them in the frontend
+
+- creating workspaces
+- adding content to the workspaces (notes/videos)
+- viewing a note
+- viewing a video

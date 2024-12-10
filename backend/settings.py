@@ -61,7 +61,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',  # To enable CORS for development
     'rest_framework', # To enable rest framework
-    'users',  # Custom app
+    'users',  # Users/Authentication
+    'workspace', # Workspace model for RAG Data
 ]
 
 MIDDLEWARE = [
@@ -134,6 +135,9 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+AUTH_USER_MODEL = 'users.User'
+
 
 
 # Internationalization

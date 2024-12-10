@@ -5,27 +5,36 @@ import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Form.css";
 
 function Form({ route, method }) {
-  // route ==> the route we want to go to when we submit the form
-  // method ==> logging in/registering
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const name = method === "login" ? "Login" : "Register";
 
   const handleSubmit = async (e) => {
-    // handle submitting form
     setLoading(true);
-    e.preventDefault(); // has to always be the top
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("username", username);
+    formData.append("password", password);
+    if (email) formData.append("email", email);
+    if (profileImage) formData.append("profile_image", profileImage);
+
     try {
-      const response = await api.post(route, { username, password });
+      const response = await api.post(route, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, response.data.access);
         localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
         navigate("/");
       } else {
-        navigate("/Login");
+        navigate("/login");
       }
     } catch (error) {
       alert(error);
@@ -51,6 +60,22 @@ function Form({ route, method }) {
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Password"
       />
+      {method === "register" && (
+        <>
+          <input
+            className="form-input"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+          />
+          <input
+            className="form-input"
+            type="file"
+            onChange={(e) => setProfileImage(e.target.files[0])}
+          />
+        </>
+      )}
       <button className="form-button" type="submit">
         {name}
       </button>
