@@ -5,7 +5,7 @@ const Header = () => {
   return (
     <header className="header">
       <div className="header-left">
-        <img src="src\assets\images\logo.jpg" alt="Logo" className="logo" />
+        <img src="src\assets\images\logo.png" alt="Logo" className="logo" />
         <h1>Master Your Studies: Learn Smarter, Not Harder!</h1>
       </div>
       <div className="header-right">

@@ -6,26 +6,7 @@ import "../styles/Dashboard.css";
 import api from "../api";
 
 function Home() {
-  const [classes, setClasses] = useState([
-    {
-      id: 1,
-      title: "Class #1",
-      description:
-        "Add main takeaway points, quotes, anecdotes, or a short story.",
-    },
-    {
-      id: 2,
-      title: "Class #2",
-      description:
-        "Add main takeaway points, quotes, anecdotes, or a short story.",
-    },
-    {
-      id: 3,
-      title: "Class #3",
-      description:
-        "Add main takeaway points, quotes, anecdotes, or a short story.",
-    },
-  ]);
+  const [classes, setClasses] = useState([]);
 
   const handleAddClass = () => {
     const newClass = {

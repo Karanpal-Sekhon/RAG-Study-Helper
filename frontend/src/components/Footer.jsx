@@ -6,16 +6,16 @@ const Footer = () => {
     <footer className="footer">
       <div className="social-icons">
         <a href="https://twitter.com">
-          <img src="/path/to/twitter-icon.png" alt="Twitter" />
+          <img src="src\assets\images\x.png" alt="Twitter" />
         </a>
         <a href="https://instagram.com">
-          <img src="/path/to/instagram-icon.png" alt="Instagram" />
+          <img src="src\assets\images\insta.png" alt="Instagram" />
         </a>
         <a href="https://youtube.com">
-          <img src="/path/to/youtube-icon.png" alt="YouTube" />
+          <img src="src\assets\images\youtube.png" alt="YouTube" />
         </a>
-        <a href="https://linkedin.com">
-          <img src="/path/to/linkedin-icon.png" alt="LinkedIn" />
+        <a href="https://www.linkedin.com/in/karanpal-sekhon/">
+          <img src="src\assets\images\linkedin.png" alt="LinkedIn" />
         </a>
       </div>
     </footer>
