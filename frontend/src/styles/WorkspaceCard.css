@@ -1,0 +1,18 @@
+.workspace-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+  }
+  
+  .workspace-actions button {
+    margin-right: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .workspace-actions .delete-btn {
+    background: red;
+    color: white;
+  }
+  

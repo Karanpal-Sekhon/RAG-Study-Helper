@@ -52,6 +52,58 @@ function Home() {
     }
   };
 
+  const handleAddMaterial = async (workspaceId, type, name, file) => {
+    try {
+      // Step 1: Create the material (note or video)
+      const endpoint =
+        type === "note"
+          ? `api/workspace/${workspaceId}/create_note`
+          : `api/workspace/${workspaceId}/create_video`;
+
+      const response = await api.post(endpoint, { title: name });
+      const createdMaterial = response.data;
+
+      // Step 2: If a file is provided, upload it
+      if (file) {
+        const fileUploadEndpoint =
+          type === "note"
+            ? `api/workspace/${workspaceId}/note/${createdMaterial.id}/upload_file`
+            : `api/workspace/${workspaceId}/video/${createdMaterial.id}/upload_file`;
+
+        const formData = new FormData();
+        formData.append("files", file);
+
+        const uploadResponse = await api.post(fileUploadEndpoint, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        // Update files in the created material
+        createdMaterial.files = uploadResponse.data;
+      }
+
+      // Step 3: Update the state
+      const updatedWorkspaces = workspaces.map((workspace) =>
+        workspace.id === workspaceId
+          ? {
+              ...workspace,
+              notes:
+                type === "note"
+                  ? [...workspace.notes, createdMaterial]
+                  : workspace.notes,
+              videos:
+                type === "video"
+                  ? [...workspace.videos, createdMaterial]
+                  : workspace.videos,
+            }
+          : workspace
+      );
+      setWorkspaces(updatedWorkspaces);
+    } catch (error) {
+      console.error("Error adding material:", error);
+      alert("Failed to add material. Please try again.");
+    }
+  };
+
   return (
     <div>
       <Header />
@@ -64,7 +116,6 @@ function Home() {
           Add Class
         </button>
 
-        {/* Add Class Popup */}
         {isAddingClass && (
           <div className="popup">
             <div className="popup-content">
@@ -94,9 +145,14 @@ function Home() {
             key={workspace.id}
             title={workspace.name}
             description={`Workspace ID: ${workspace.id}`}
-            onAddMaterial={() => alert("Add Material clicked!")}
+            notes={workspace.notes}
+            videos={workspace.videos}
             onDelete={() => handleDeleteClass(workspace.id)}
-            onStudy={() => alert(`Studying ${workspace.name}`)}
+            onStudy={() => alert(`Studying workspace: ${workspace.name}`)}
+            workspaceId={workspace.id}
+            onAddMaterial={(type, name, file) =>
+              handleAddMaterial(workspace.id, type, name, file)
+            }
           />
         ))}
       </main>

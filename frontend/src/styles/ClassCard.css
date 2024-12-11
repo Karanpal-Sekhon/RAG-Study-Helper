@@ -15,4 +15,37 @@
     background: red;
     color: white;
   }
+  .materials {
+    margin-top: 20px;
+  }
+  
+  .material {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+  }
+  
+  .material h4 {
+    margin-bottom: 5px;
+  }
+  
+  .material ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .material ul li {
+    margin-bottom: 5px;
+  }
+  
+  .material ul li a {
+    text-decoration: none;
+    color: #007bff;
+    word-break: break-word;
+  }
+  
+  .material ul li a:hover {
+    text-decoration: underline;
+  }
   

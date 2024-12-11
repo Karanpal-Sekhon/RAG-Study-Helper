@@ -1,13 +1,33 @@
-import React from "react";
+import React, { useState } from "react";
 import "../styles/ClassCard.css";
 
 const ClassCard = ({
   title,
   description,
-  onAddMaterial,
+  notes,
+  videos,
   onDelete,
   onStudy,
+  onAddMaterial,
+  workspaceId,
 }) => {
+  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
+  const [materialType, setMaterialType] = useState(""); // "note" or "video"
+  const [materialName, setMaterialName] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleAddMaterial = () => {
+    if (!materialType || !materialName.trim()) {
+      alert("Please select a type and provide a name.");
+      return;
+    }
+    onAddMaterial(materialType, materialName, selectedFile);
+    setIsAddingMaterial(false);
+    setMaterialType("");
+    setMaterialName("");
+    setSelectedFile(null);
+  };
+
   return (
     <div className="class-card">
       <h2>{title}</h2>
@@ -17,7 +37,90 @@ const ClassCard = ({
         <button onClick={onDelete} className="delete-btn">
           Delete
         </button>
-        <button onClick={onAddMaterial}>Add Material</button>
+        <button onClick={() => setIsAddingMaterial(true)}>Add Material</button>
+      </div>
+
+      {isAddingMaterial && (
+        <div className="popup">
+          <div className="popup-content">
+            <h3>Add Material</h3>
+            <label>
+              <input
+                type="radio"
+                value="note"
+                checked={materialType === "note"}
+                onChange={() => setMaterialType("note")}
+              />
+              Note
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="video"
+                checked={materialType === "video"}
+                onChange={() => setMaterialType("video")}
+              />
+              Video
+            </label>
+            <input
+              type="text"
+              placeholder="Enter name"
+              value={materialName}
+              onChange={(e) => setMaterialName(e.target.value)}
+            />
+            <input
+              type="file"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+            />
+            <button onClick={handleAddMaterial} className="popup-btn">
+              Submit
+            </button>
+            <button
+              onClick={() => setIsAddingMaterial(false)}
+              className="popup-btn cancel"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Render Notes */}
+      <div className="materials">
+        <h3>Notes</h3>
+        {notes.map((note) => (
+          <div key={note.id} className="material">
+            <h4>{note.title}</h4>
+            <ul>
+              {note.files.map((file) => (
+                <li key={file.id}>
+                  <a href={file.file} target="_blank" rel="noopener noreferrer">
+                    {file.file.split("/").pop()}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {/* Render Videos */}
+      <div className="materials">
+        <h3>Videos</h3>
+        {videos.map((video) => (
+          <div key={video.id} className="material">
+            <h4>{video.title}</h4>
+            <ul>
+              {video.files.map((file) => (
+                <li key={file.id}>
+                  <a href={file.file} target="_blank" rel="noopener noreferrer">
+                    {file.file.split("/").pop()}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
     </div>
   );
