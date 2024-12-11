@@ -11,9 +11,6 @@ from django.shortcuts import get_object_or_404
 
 # Create Workspace view
 class CreateWorkspaceView(APIView):
-    serializer_class = WorkspaceSerializer
-    permission_classes = [IsAuthenticated]
-
     def post(self, request):
         req_data = request.data
         data = {}
@@ -33,9 +30,6 @@ class CreateWorkspaceView(APIView):
 
 # Retrieve Workspace view
 class WorkspaceDetailView(APIView):
-    serializer_class = WorkspaceSerializer
-    permission_classes = [IsAuthenticated]
-
     def get(self, request, workspace_id):
 
         try:
@@ -47,3 +41,6 @@ class WorkspaceDetailView(APIView):
         workspace_data = serializer.data
 
         return Response(workspace_data, status=status.HTTP_200_OK)
+    
+# Note view
+
