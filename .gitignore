@@ -169,3 +169,7 @@ launch.json
 *.orig
 /staticfiles/
 eg.json
+
+todo.md
+/notes
+/videos
