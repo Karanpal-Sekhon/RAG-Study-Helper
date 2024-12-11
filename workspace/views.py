@@ -9,6 +9,15 @@ from django.shortcuts import get_object_or_404
 
 # Workspace views
 
+class UserWorkspacesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Fetch all workspaces owned by the authenticated user
+        workspaces = Workspace.objects.filter(owner=request.user)
+        serializer = WorkspaceSerializer(workspaces, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 # Create Workspace view
 class CreateWorkspaceView(APIView):
     def post(self, request):

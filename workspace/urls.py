@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import CreateWorkspaceView, WorkspaceDetailView, CreateNoteView, NoteDetailView, CreateVideoView, VideoDetailView, WorkspaceNotesView, WorkspaceVideosView, UploadNoteFileView, UploadVideoFileView
+from .views import CreateWorkspaceView, WorkspaceDetailView, CreateNoteView, NoteDetailView, CreateVideoView, VideoDetailView, WorkspaceNotesView, WorkspaceVideosView, UploadNoteFileView, UploadVideoFileView, UserWorkspacesView
 import uuid
 
 urlpatterns = [
+    path('workspaces/', UserWorkspacesView.as_view(), name='workspace_list'),
     path('workspace/create', CreateWorkspaceView.as_view(), name='create_workspace'),
     path('workspace/<workspace_id>/detail', WorkspaceDetailView.as_view(), name='workspace_detail'),
     path('workspace/<workspace_id>/create_note', CreateNoteView.as_view(), name='create_note'),

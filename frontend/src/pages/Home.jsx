@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import ClassCard from "../components/ClassCard";
 import Footer from "../components/Footer";
@@ -6,20 +6,50 @@ import "../styles/Dashboard.css";
 import api from "../api";
 
 function Home() {
-  const [classes, setClasses] = useState([]);
+  const [workspaces, setWorkspaces] = useState([]);
+  const [isAddingClass, setIsAddingClass] = useState(false);
+  const [newClassName, setNewClassName] = useState("");
 
-  const handleAddClass = () => {
-    const newClass = {
-      id: classes.length + 1,
-      title: `Class #${classes.length + 1}`,
-      description:
-        "Add main takeaway points, quotes, anecdotes, or a short story.",
-    };
-    setClasses([...classes, newClass]);
+  // Fetch workspaces on component mount
+  useEffect(() => {
+    fetchWorkspaces();
+  }, []);
+
+  const fetchWorkspaces = async () => {
+    try {
+      const response = await api.get("api/workspaces/");
+      setWorkspaces(response.data);
+    } catch (error) {
+      console.error("Error fetching workspaces:", error);
+    }
   };
 
-  const handleDeleteClass = (id) => {
-    setClasses(classes.filter((classItem) => classItem.id !== id));
+  const handleAddClass = async () => {
+    if (!newClassName.trim()) {
+      alert("Class name cannot be empty.");
+      return;
+    }
+    try {
+      const response = await api.post("api/workspace/create", {
+        name: newClassName,
+      });
+      setWorkspaces([...workspaces, response.data]);
+      setIsAddingClass(false);
+      setNewClassName("");
+    } catch (error) {
+      console.error("Error adding workspace:", error);
+      alert("Failed to add workspace. Please try again.");
+    }
+  };
+
+  const handleDeleteClass = async (id) => {
+    try {
+      await api.delete(`api/workspace/${id}/detail`);
+      setWorkspaces(workspaces.filter((workspace) => workspace.id !== id));
+    } catch (error) {
+      console.error("Error deleting workspace:", error);
+      alert("Failed to delete workspace. Please try again.");
+    }
   };
 
   return (
@@ -27,17 +57,46 @@ function Home() {
       <Header />
       <main className="dashboard">
         <h2>My Classes</h2>
-        <button onClick={handleAddClass} className="add-class-btn">
+        <button
+          onClick={() => setIsAddingClass(true)}
+          className="add-class-btn"
+        >
           Add Class
         </button>
-        {classes.map((classItem) => (
+
+        {/* Add Class Popup */}
+        {isAddingClass && (
+          <div className="popup">
+            <div className="popup-content">
+              <h3>Create a New Class</h3>
+              <input
+                type="text"
+                value={newClassName}
+                onChange={(e) => setNewClassName(e.target.value)}
+                placeholder="Class Name"
+              />
+              <button onClick={handleAddClass} className="popup-btn">
+                Add
+              </button>
+              <button
+                onClick={() => setIsAddingClass(false)}
+                className="popup-btn cancel"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Render Workspaces */}
+        {workspaces.map((workspace) => (
           <ClassCard
-            key={classItem.id}
-            title={classItem.title}
-            description={classItem.description}
+            key={workspace.id}
+            title={workspace.name}
+            description={`Workspace ID: ${workspace.id}`}
             onAddMaterial={() => alert("Add Material clicked!")}
-            onDelete={() => handleDeleteClass(classItem.id)}
-            onStudy={() => alert(`Studying ${classItem.title}`)}
+            onDelete={() => handleDeleteClass(workspace.id)}
+            onStudy={() => alert(`Studying ${workspace.name}`)}
           />
         ))}
       </main>
@@ -45,4 +104,5 @@ function Home() {
     </div>
   );
 }
+
 export default Home;
