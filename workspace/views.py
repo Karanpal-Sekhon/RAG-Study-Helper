@@ -38,6 +38,16 @@ class WorkspaceDetailView(APIView):
         serializer = WorkspaceSerializer(workspace)
         workspace_data = serializer.data
         return Response(workspace_data, status=status.HTTP_200_OK)
+
+    def delete(self, request, workspace_id):
+        # Fetch the workspace object
+        workspace = Workspace.objects.filter(id=workspace_id, owner=request.user).first()
+        if not workspace:
+            return Response({"error": "Workspace not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Delete the workspace
+        workspace.delete()
+        return Response({"message": "Workspace deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
     
 
 class WorkspaceVideosView(APIView):
@@ -100,6 +110,16 @@ class NoteDetailView(APIView):
         serializer = NotesSerializer(note)
         note_data = serializer.data
         return Response(note_data, status=status.HTTP_200_OK)
+    
+    def delete(self, request, workspace_id, note_id):
+        # Fetch the note object
+        note = Notes.objects.filter(id=note_id, workspace__id=workspace_id, workspace__owner=request.user).first()
+        if not note:
+            return Response({"error": "Note not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Delete the note
+        note.delete()
+        return Response({"message": "Note deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
     
 
 class UploadNoteFileView(APIView):
@@ -164,6 +184,16 @@ class VideoDetailView(APIView):
         serializer = VideosSerializer(video)
         video_data = serializer.data
         return Response(video_data, status=status.HTTP_200_OK)
+    
+    def delete(self, request, workspace_id, video_id):
+        # Fetch the video object
+        video = Videos.objects.filter(id=video_id, workspace__id=workspace_id, workspace__owner=request.user).first()
+        if not video:
+            return Response({"error": "Video not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Delete the video
+        video.delete()
+        return Response({"message": "Video deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
     
 class UploadVideoFileView(APIView):
     permission_classes = [IsAuthenticated]
