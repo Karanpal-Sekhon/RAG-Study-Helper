@@ -22,4 +22,9 @@
 
 ## Current Progress
 
-#### Progress check for the next day
+#### Completed all file uploading functionality
+
+- small caveat to this in that you cannot upload mutliple files at once, each time a new
+  file is uploaded, there is a new object created. Will fix this next day, and add functionality
+  to add material to existing note and video objects.
+- also ui is pretty bad, but will fix that in coming future.

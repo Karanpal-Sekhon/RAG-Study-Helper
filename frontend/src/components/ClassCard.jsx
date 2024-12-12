@@ -9,10 +9,11 @@ const ClassCard = ({
   onDelete,
   onStudy,
   onAddMaterial,
+  onDeleteMaterial, // This callback is passed from Home.jsx
   workspaceId,
 }) => {
   const [isAddingMaterial, setIsAddingMaterial] = useState(false);
-  const [materialType, setMaterialType] = useState(""); // "note" or "video"
+  const [materialType, setMaterialType] = useState("");
   const [materialName, setMaterialName] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -26,6 +27,16 @@ const ClassCard = ({
     setMaterialType("");
     setMaterialName("");
     setSelectedFile(null);
+  };
+
+  // Deleting notes
+  const handleDeleteNote = (noteId) => {
+    onDeleteMaterial("note", noteId); // Pass the note ID and type to the parent callback
+  };
+
+  // Deleting videos
+  const handleDeleteVideo = (videoId) => {
+    onDeleteMaterial("video", videoId); // Pass the video ID and type to the parent callback
   };
 
   return (
@@ -100,6 +111,12 @@ const ClassCard = ({
                 </li>
               ))}
             </ul>
+            <button
+              onClick={() => handleDeleteNote(note.id)}
+              className="popup-btn"
+            >
+              Delete Note
+            </button>
           </div>
         ))}
       </div>
@@ -119,6 +136,12 @@ const ClassCard = ({
                 </li>
               ))}
             </ul>
+            <button
+              onClick={() => handleDeleteVideo(video.id)}
+              className="popup-btn"
+            >
+              Delete Video
+            </button>
           </div>
         ))}
       </div>

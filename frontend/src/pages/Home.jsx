@@ -10,7 +10,6 @@ function Home() {
   const [isAddingClass, setIsAddingClass] = useState(false);
   const [newClassName, setNewClassName] = useState("");
 
-  // Fetch workspaces on component mount
   useEffect(() => {
     fetchWorkspaces();
   }, []);
@@ -54,7 +53,6 @@ function Home() {
 
   const handleAddMaterial = async (workspaceId, type, name, file) => {
     try {
-      // Step 1: Create the material (note or video)
       const endpoint =
         type === "note"
           ? `api/workspace/${workspaceId}/create_note`
@@ -63,7 +61,6 @@ function Home() {
       const response = await api.post(endpoint, { title: name });
       const createdMaterial = response.data;
 
-      // Step 2: If a file is provided, upload it
       if (file) {
         const fileUploadEndpoint =
           type === "note"
@@ -73,34 +70,61 @@ function Home() {
         const formData = new FormData();
         formData.append("files", file);
 
-        const uploadResponse = await api.post(fileUploadEndpoint, formData, {
+        await api.post(fileUploadEndpoint, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-
-        // Update files in the created material
-        createdMaterial.files = uploadResponse.data;
       }
 
-      // Step 3: Update the state
-      const updatedWorkspaces = workspaces.map((workspace) =>
-        workspace.id === workspaceId
-          ? {
-              ...workspace,
-              notes:
-                type === "note"
-                  ? [...workspace.notes, createdMaterial]
-                  : workspace.notes,
-              videos:
-                type === "video"
-                  ? [...workspace.videos, createdMaterial]
-                  : workspace.videos,
-            }
-          : workspace
+      // Fetch the updated workspace
+      const updatedWorkspaceResponse = await api.get(
+        `api/workspace/${workspaceId}/detail`
       );
-      setWorkspaces(updatedWorkspaces);
+      const updatedWorkspace = updatedWorkspaceResponse.data;
+
+      // Update the workspace in state
+      setWorkspaces(
+        workspaces.map((workspace) =>
+          workspace.id === workspaceId ? updatedWorkspace : workspace
+        )
+      );
     } catch (error) {
       console.error("Error adding material:", error);
       alert("Failed to add material. Please try again.");
+    }
+  };
+
+  const handleDeleteMaterial = async (workspaceId, type, materialId) => {
+    try {
+      const endpoint =
+        type === "note"
+          ? `api/workspace/${workspaceId}/note/${materialId}`
+          : `api/workspace/${workspaceId}/video/${materialId}`;
+
+      await api.delete(endpoint);
+
+      // Update the state to remove the deleted material
+      setWorkspaces(
+        workspaces.map((workspace) =>
+          workspace.id === workspaceId
+            ? {
+                ...workspace,
+                notes:
+                  type === "note"
+                    ? workspace.notes.filter((note) => note.id !== materialId)
+                    : workspace.notes,
+                videos:
+                  type === "video"
+                    ? workspace.videos.filter(
+                        (video) => video.id !== materialId
+                      )
+                    : workspace.videos,
+              }
+            : workspace
+        )
+      );
+    } catch (error) {
+      console.error("Error deleting material:", error);
+      alert("Failed to delete material. Please try again.");
     }
   };
 
@@ -139,7 +163,6 @@ function Home() {
           </div>
         )}
 
-        {/* Render Workspaces */}
         {workspaces.map((workspace) => (
           <ClassCard
             key={workspace.id}
@@ -152,6 +175,9 @@ function Home() {
             workspaceId={workspace.id}
             onAddMaterial={(type, name, file) =>
               handleAddMaterial(workspace.id, type, name, file)
+            }
+            onDeleteMaterial={(type, materialId) =>
+              handleDeleteMaterial(workspace.id, type, materialId)
             }
           />
         ))}
