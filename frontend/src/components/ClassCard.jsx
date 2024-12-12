@@ -139,9 +139,10 @@ const ClassCard = ({
                 </li>
               ))}
             </ul>
+            <button>Edit Files</button>
             <button
               onClick={() => handleDeleteVideo(video.id)}
-              className="popup-btn"
+              className="delete-btn"
             >
               Delete Video
             </button>
@@ -151,5 +152,4 @@ const ClassCard = ({
     </div>
   );
 };
-
 export default ClassCard;
