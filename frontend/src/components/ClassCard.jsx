@@ -48,13 +48,15 @@ const ClassCard = ({
         <button onClick={onDelete} className="delete-btn">
           Delete
         </button>
-        <button onClick={() => setIsAddingMaterial(true)}>Add Material</button>
+        <button onClick={() => setIsAddingMaterial(true)}>
+          Create Note/Video
+        </button>
       </div>
 
       {isAddingMaterial && (
         <div className="popup">
           <div className="popup-content">
-            <h3>Add Material</h3>
+            <h3>Create Note/Video</h3>
             <label>
               <input
                 type="radio"
@@ -111,9 +113,10 @@ const ClassCard = ({
                 </li>
               ))}
             </ul>
+            <button>Edit Files</button>
             <button
               onClick={() => handleDeleteNote(note.id)}
-              className="popup-btn"
+              className="delete-btn"
             >
               Delete Note
             </button>

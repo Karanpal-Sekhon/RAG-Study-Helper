@@ -48,4 +48,9 @@
   .material ul li a:hover {
     text-decoration: underline;
   }
+
+  .material button {
+    margin: 5px;
+    border-radius: 5px;
+  }
   
