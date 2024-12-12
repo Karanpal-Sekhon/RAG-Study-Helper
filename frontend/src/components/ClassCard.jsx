@@ -49,7 +49,7 @@ const ClassCard = ({
           Delete
         </button>
         <button onClick={() => setIsAddingMaterial(true)}>
-          Create Note/Video
+          Add Note/Video Set
         </button>
       </div>
 

@@ -17,14 +17,20 @@
 
 - creating workspaces
 - adding content to the workspaces (notes/videos)
-- viewing a note
-- viewing a video
 
 ## Current Progress
 
 #### Completed all file uploading functionality
 
-- small caveat to this in that you cannot upload mutliple files at once, each time a new
-  file is uploaded, there is a new object created. Will fix this next day, and add functionality
-  to add material to existing note and video objects.
+- need to add editing files, adding multiple files, deleting/removing files, etc
 - also ui is pretty bad, but will fix that in coming future.
+- viewing files also needs to be done
+- not 100% confident with how the ui is structured, but we shall move.
+
+#### Tomorrow
+
+- implement editing files in a Note or Video
+- Make the Workspace page
+- Make the Note View Page
+- Make the video page
+- fix the note and video upload location, (i.e when obj is deleted, the files are also deleted)
