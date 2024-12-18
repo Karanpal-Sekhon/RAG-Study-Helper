@@ -132,12 +132,12 @@ function Home() {
     <div>
       <Header />
       <main className="dashboard">
-        <h2>My Classes</h2>
+        <h2>My Workspaces</h2>
         <button
           onClick={() => setIsAddingClass(true)}
           className="add-class-btn"
         >
-          Add Class
+          Add Workspace
         </button>
 
         {isAddingClass && (

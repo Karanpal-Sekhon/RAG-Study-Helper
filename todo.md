@@ -31,6 +31,22 @@
 
 - implement editing files in a Note or Video
 - Make the Workspace page
-- Make the Note View Page
-- Make the video page
 - fix the note and video upload location, (i.e when obj is deleted, the files are also deleted)
+
+#### Schdeule
+
+- Dec 18th
+
+  - Fully functional file uploading and viewing site
+  - implemented chat system for a workspace, noteset and video set (not ai, just the ui)
+  - added buttons for the flash card, but not fully functional. Just placeholder
+
+- Dec 20th - 24th
+
+  - Holiday
+
+- Dec 30th
+  - chat system working at least semi well, can fine tune and improve later
+  - implement flash-card ui halfway
+    - creating flashcards
+    - using flashcards
