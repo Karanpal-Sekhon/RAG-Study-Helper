@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import ClassCard from "../components/ClassCard";
 import Footer from "../components/Footer";
-import "../styles/Dashboard.css";
+import "../styles/Home.css";
 import api from "../api";
+import Button from "../components/mainButton";
 
 function Home() {
   const [workspaces, setWorkspaces] = useState([]);
@@ -133,12 +134,7 @@ function Home() {
       <Header />
       <main className="dashboard">
         <h2>My Workspaces</h2>
-        <button
-          onClick={() => setIsAddingClass(true)}
-          className="add-class-btn"
-        >
-          Add Workspace
-        </button>
+        <Button onClick={() => setIsAddingClass(true)}>Add Workspace</Button>
 
         {isAddingClass && (
           <div className="popup">
@@ -150,9 +146,7 @@ function Home() {
                 onChange={(e) => setNewClassName(e.target.value)}
                 placeholder="Class Name"
               />
-              <button onClick={handleAddClass} className="popup-btn">
-                Add
-              </button>
+              <button onClick={handleAddClass}>Add</button>
               <button
                 onClick={() => setIsAddingClass(false)}
                 className="popup-btn cancel"

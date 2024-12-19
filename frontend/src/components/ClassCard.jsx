@@ -97,58 +97,6 @@ const ClassCard = ({
           </div>
         </div>
       )}
-
-      {/* Render Notes */}
-      <div className="materials">
-        <h3>Notes</h3>
-        {notes.map((note) => (
-          <div key={note.id} className="material">
-            <h4>{note.title}</h4>
-            <ul>
-              {note.files.map((file) => (
-                <li key={file.id}>
-                  <a href={file.file} target="_blank" rel="noopener noreferrer">
-                    {file.file.split("/").pop()}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <button>Edit Files</button>
-            <button
-              onClick={() => handleDeleteNote(note.id)}
-              className="delete-btn"
-            >
-              Delete Note
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Render Videos */}
-      <div className="materials">
-        <h3>Videos</h3>
-        {videos.map((video) => (
-          <div key={video.id} className="material">
-            <h4>{video.title}</h4>
-            <ul>
-              {video.files.map((file) => (
-                <li key={file.id}>
-                  <a href={file.file} target="_blank" rel="noopener noreferrer">
-                    {file.file.split("/").pop()}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <button>Edit Files</button>
-            <button
-              onClick={() => handleDeleteVideo(video.id)}
-              className="delete-btn"
-            >
-              Delete Video
-            </button>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };

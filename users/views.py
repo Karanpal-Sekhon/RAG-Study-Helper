@@ -28,5 +28,6 @@ class UserInfoView(APIView):
             "id": str(user.id),
             "username": user.username,
             "email": user.email,
+            "profile_image": user.profile_image if user.profile_image else None
         }
         return Response(user_data, status=200)

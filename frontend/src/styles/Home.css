@@ -1,0 +1,23 @@
+.dashboard {
+  padding: 20px;
+  font-family: Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+    sans-serif;
+  align-items: center;
+}
+
+.add-class-btn {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: green;
+  color: white;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+}
+
+.dashboard h2 {
+  display: inline;
+  margin-right: 0.5em;
+  align-items: center;
+  text-align: center;
+}

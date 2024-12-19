@@ -1,23 +1,29 @@
 .header {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 20px;
-    border-bottom: 1px solid #ccc;
-  }
-  
-  .header-left {
-    display: flex;
-    align-items: center;
-  }
-  
-  .logo {
-    width: 40px;
-    margin-right: 10px;
-  }
-  
-  .header-right .btn {
-    margin-right: 10px;
-    margin-left: 10px;
-    padding: 5px 10px;
-    cursor: pointer;
-  }
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid #ccc;
+  font-family: Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+    sans-serif;
+}
+
+.header h1 {
+  flex-grow: 1;
+  font-size: 1em;
+  margin-left: 1em;
+}
+
+.header .logo {
+  height: 92px;
+  width: auto;
+}
+
+.logo {
+  width: 40px;
+  margin-right: 10px;
+}
+
+.user-name {
+  margin-left: 1em;
+}
+/* From Uiverse.io by reshades */
