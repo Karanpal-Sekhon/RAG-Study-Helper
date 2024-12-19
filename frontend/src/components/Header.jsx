@@ -34,7 +34,7 @@ const Header = () => {
       <img src="src/assets/images/logo.png" alt="Logo" className="logo" />
       <h1>Master Your Studies: Learn Smarter, Not Harder!</h1>
       <Button onClick={handleLogout}>Logout</Button>
-      <span className="user-name">Welcome, {userName}</span>
+      <img src={userImage} alt="User Profile" className="user-image" />
     </header>
   );
 };

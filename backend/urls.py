@@ -3,6 +3,8 @@ from django.urls import path, include
 from users.views import CreateUserView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from users.views import UserInfoView
+from . import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # Admin Panel
@@ -21,3 +23,6 @@ urlpatterns = [
     # Workspace Management
     path('api/', include('workspace.urls')),  # All workspace-related endpoints
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

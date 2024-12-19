@@ -28,6 +28,6 @@ class UserInfoView(APIView):
             "id": str(user.id),
             "username": user.username,
             "email": user.email,
-            "profile_image": user.profile_image if user.profile_image else None
+            "profile_image": request.build_absolute_uri(user.profile_image.url) if user.profile_image else None
         }
         return Response(user_data, status=200)

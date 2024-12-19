@@ -23,6 +23,20 @@
   margin-right: 10px;
 }
 
+.header .user-image {
+  width: 70px; /* Slightly smaller than the logo */
+  height: 70px; /* Ensure it's a perfect circle */
+  border-radius: 50%; /* Makes the image circular */
+  border: 2px solid #ccc; /* Adds a border around the image */
+  object-fit: cover; /* Ensures the image fits nicely inside the circle */
+  transition: transform 0.3s ease-in-out; /* Smooth hover effect */
+}
+
+.header .user-image:hover {
+  transform: scale(1.2); /* Expands the image on hover */
+  border-color: #5b5d5f; /* Optional: change border color on hover */
+}
+
 .user-name {
   margin-left: 1em;
 }
