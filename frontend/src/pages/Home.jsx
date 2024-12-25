@@ -5,11 +5,13 @@ import Footer from "../components/Footer";
 import "../styles/Home.css";
 import api from "../api";
 import Button from "../components/mainButton";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
   const [workspaces, setWorkspaces] = useState([]);
   const [isAddingClass, setIsAddingClass] = useState(false);
   const [newClassName, setNewClassName] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchWorkspaces();
@@ -129,6 +131,10 @@ function Home() {
     }
   };
 
+  const handleStudy = (workspaceId) => {
+    navigate(`workspace/${workspaceId}`);
+  };
+
   return (
     <div>
       <Header />
@@ -165,7 +171,7 @@ function Home() {
             notes={workspace.notes}
             videos={workspace.videos}
             onDelete={() => handleDeleteClass(workspace.id)}
-            onStudy={() => alert(`Studying workspace: ${workspace.name}`)}
+            onStudy={() => handleStudy(workspace.id)}
             workspaceId={workspace.id}
             onAddMaterial={(type, name, file) =>
               handleAddMaterial(workspace.id, type, name, file)

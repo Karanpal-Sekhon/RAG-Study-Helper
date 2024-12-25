@@ -18,6 +18,10 @@
   width: auto;
 }
 
+.header a:hover {
+  cursor: pointer;
+}
+
 .logo {
   width: 40px;
   margin-right: 10px;

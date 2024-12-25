@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/Header.css";
 import api from "../api";
 import Button from "./mainButton";
+import logo from "../assets/images/logo.png";
 
 const Header = () => {
   const [userName, setUserName] = useState("");
@@ -29,9 +30,15 @@ const Header = () => {
     navigate("/logout"); // Redirect to the logout route
   };
 
+  const handleHome = () => {
+    navigate("/");
+  };
+
   return (
     <header className="header">
-      <img src="src/assets/images/logo.png" alt="Logo" className="logo" />
+      <a onClick={handleHome}>
+        <img src={logo} alt="Logo" className="logo" />
+      </a>
       <h1>Master Your Studies: Learn Smarter, Not Harder!</h1>
       <Button onClick={handleLogout}>Logout</Button>
       <img src={userImage} alt="User Profile" className="user-image" />
