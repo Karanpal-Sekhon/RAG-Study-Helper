@@ -35,11 +35,12 @@
 
 #### Schdeule
 
-- Dec 18th
+- Dec 19th
 
-  - Fully functional file uploading and viewing site
-  - implemented chat system for a workspace, noteset and video set (not ai, just the ui)
-  - added buttons for the flash card, but not fully functional. Just placeholder
+- Create the workspace studying page
+
+  - Able to view notesets and videosets
+  - Edit notesets and video sets
 
 - Dec 20th - 24th
 
