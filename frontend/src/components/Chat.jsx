@@ -1,10 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../styles/Chat.css";
+import api from "../api";
 
-const Chat = () => {
+const Chat = ({ workspaceId }) => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef(null);
+  const [workspace, setWorkspace] = useState({});
+
+  const fetchWorkspace = async () => {
+    try {
+      const response = await api.get(`api/workspace/${workspaceId}/detail`);
+      setWorkspace(response.data);
+    } catch (error) {
+      console.error("Error fetching workspace detail", error);
+    }
+  };
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
@@ -23,10 +34,14 @@ const Chat = () => {
     }
   }, [messages]);
 
+  useEffect(() => {
+    fetchWorkspace();
+  }, [workspaceId]);
+
   return (
     <div className="chat">
       <div className="chat-header">
-        <h2>Chat with your Study Assistant</h2>
+        <h2>{workspace.name}</h2>
       </div>
       <div className="chat-messages">
         {messages.map((msg, index) => (

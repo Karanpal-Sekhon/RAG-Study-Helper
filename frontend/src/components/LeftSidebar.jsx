@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/LeftSidebar.css";
 import api from "../api";
 
-const LeftSidebar = ({ workspaceId }) => {
+const LeftSidebar = ({ workspaceId, materialsUpdated }) => {
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [isVideosOpen, setIsVideosOpen] = useState(false);
   const [notes, setNotes] = useState([]);
@@ -10,7 +10,7 @@ const LeftSidebar = ({ workspaceId }) => {
 
   useEffect(() => {
     fetchMaterials();
-  }, [workspaceId]);
+  }, [workspaceId, materialsUpdated]); // Re-fetch materials when workspaceId or materialsUpdated changes
 
   const fetchMaterials = async () => {
     try {
