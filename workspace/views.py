@@ -161,6 +161,16 @@ class UploadNoteFileView(APIView):
         serialized_files = NoteFileSerializer(created_files, many=True)
         return Response(serialized_files.data, status=status.HTTP_201_CREATED)
 
+    def delete(self, request, workspace_id, note_id, file_id):
+        # Fetch the note file object
+        note_file = NoteFile.objects.filter(id=file_id, note__id=note_id, note__workspace__id=workspace_id, note__workspace__owner=request.user).first()
+        if not note_file:
+            return Response({"error": "File not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Delete the note file
+        note_file.delete()
+        return Response({"message": "File deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
 # Video views
 
 # Create video view
@@ -231,3 +241,13 @@ class UploadVideoFileView(APIView):
         # Serialize and return the created files
         serialized_files = VideoFileSerializer(created_files, many=True)
         return Response(serialized_files.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, workspace_id, video_id, file_id):
+        # Fetch the video file object
+        video_file = VideoFile.objects.filter(id=file_id, video__id=video_id, video__workspace__id=workspace_id, video__workspace__owner=request.user).first()
+        if not video_file:
+            return Response({"error": "File not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Delete the video file
+        video_file.delete()
+        return Response({"message": "File deleted successfully."}, status=status.HTTP_204_NO_CONTENT)

@@ -44,6 +44,90 @@ const LeftSidebar = ({ workspaceId, materialsUpdated }) => {
     }
   };
 
+  const handleDeleteNoteFile = async (noteId, fileId) => {
+    try {
+      await api.delete(
+        `api/workspace/${workspaceId}/note/${noteId}/file/${fileId}/delete`
+      );
+      setNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note.id === noteId
+            ? {
+                ...note,
+                files: note.files.filter((file) => file.id !== fileId),
+              }
+            : note
+        )
+      );
+    } catch (error) {
+      console.error("Error deleting note file:", error);
+      alert("Failed to delete note file. Please try again.");
+    }
+  };
+
+  const handleDeleteVideoFile = async (videoId, fileId) => {
+    try {
+      await api.delete(
+        `api/workspace/${workspaceId}/video/${videoId}/file/${fileId}/delete`
+      );
+      setVideos((prevVideos) =>
+        prevVideos.map((video) =>
+          video.id === videoId
+            ? {
+                ...video,
+                files: video.files.filter((file) => file.id !== fileId),
+              }
+            : video
+        )
+      );
+    } catch (error) {
+      console.error("Error deleting video file:", error);
+      alert("Failed to delete video file. Please try again.");
+    }
+  };
+
+  const handleUploadNoteFile = async (noteId, files) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    try {
+      const response = await api.post(
+        `api/workspace/${workspaceId}/note/${noteId}/upload_file`,
+        formData
+      );
+      setNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note.id === noteId
+            ? { ...note, files: [...note.files, ...response.data] }
+            : note
+        )
+      );
+    } catch (error) {
+      console.error("Error uploading note files:", error);
+      alert("Failed to upload note files. Please try again.");
+    }
+  };
+
+  const handleUploadVideoFile = async (videoId, files) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    try {
+      const response = await api.post(
+        `api/workspace/${workspaceId}/video/${videoId}/upload_file`,
+        formData
+      );
+      setVideos((prevVideos) =>
+        prevVideos.map((video) =>
+          video.id === videoId
+            ? { ...video, files: [...video.files, ...response.data] }
+            : video
+        )
+      );
+    } catch (error) {
+      console.error("Error uploading video files:", error);
+      alert("Failed to upload video files. Please try again.");
+    }
+  };
+
   return (
     <div className="left-sidebar">
       <input
@@ -76,9 +160,22 @@ const LeftSidebar = ({ workspaceId, materialsUpdated }) => {
                       >
                         {file.file.split("/").pop()}
                       </a>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDeleteNoteFile(note.id, file.id)}
+                      >
+                        Delete File
+                      </button>
                     </li>
                   ))}
                 </ul>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) =>
+                    handleUploadNoteFile(note.id, Array.from(e.target.files))
+                  }
+                />
                 <button
                   className="delete-btn"
                   onClick={() => handleDeleteNote(note.id)}
@@ -115,9 +212,22 @@ const LeftSidebar = ({ workspaceId, materialsUpdated }) => {
                       >
                         {file.file.split("/").pop()}
                       </a>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDeleteVideoFile(video.id, file.id)}
+                      >
+                        Delete File
+                      </button>
                     </li>
                   ))}
                 </ul>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) =>
+                    handleUploadVideoFile(video.id, Array.from(e.target.files))
+                  }
+                />
                 <button
                   className="delete-btn"
                   onClick={() => handleDeleteVideo(video.id)}

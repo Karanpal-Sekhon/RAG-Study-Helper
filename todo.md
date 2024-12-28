@@ -1,53 +1,17 @@
 # TODO
 
-1. work on apis (design them)
-
-- update each of the urls, and the views for each url. Construct them yourself, you know more than GPT! (trust)
-  - use gpt to consult, not design
-  - you design the api, objects and all.
-- Creating a Workspace
-- Getting a Workspace
-- Updating a Workspace
-- creating a note
-- getting a note
-- creating a video
-- getting a video
-
-2. implement them in the frontend
-
-- creating workspaces
-- adding content to the workspaces (notes/videos)
+- create product backlog, i.e, create the tickets
+  - be specific, what functionality is needed, how the ui
+  - label priority by sprint completion dates, the ones given are preliminary
+    - First sprint 26th - 27th (All non-ai functionality)
+    - Second sprint 27th - 4th (RAG study chat implementation + Flashcard UI)
+    - Last sprint 4th - 6th (Flashcard + deployment)
 
 ## Current Progress
 
-#### Completed all file uploading functionality
+#### Completed preliminary functionality
 
-- need to add editing files, adding multiple files, deleting/removing files, etc
-- also ui is pretty bad, but will fix that in coming future.
-- viewing files also needs to be done
-- not 100% confident with how the ui is structured, but we shall move.
-
-#### Tomorrow
-
-- implement editing files in a Note or Video
-- Make the Workspace page
-- fix the note and video upload location, (i.e when obj is deleted, the files are also deleted)
-
-#### Schdeule
-
-- Dec 19th
-
-- Create the workspace studying page
-
-  - Able to view notesets and videosets
-  - Edit notesets and video sets
-
-- Dec 20th - 24th
-
-  - Holiday
-
-- Dec 30th
-  - chat system working at least semi well, can fine tune and improve later
-  - implement flash-card ui halfway
-    - creating flashcards
-    - using flashcards
+- Workspace page completed
+- preliminary file uploading, "editing" functional
+- workspace structure is proper
+- chat ui is also implemented, logic will come with AI integration
