@@ -4,7 +4,7 @@ djangorestframework>=3.14,<4.0
 djangorestframework-simplejwt
 django-cors-headers>=3.13,<4.0
 psycopg2>=2.9,<3.0
-gunicorn>=20.1,<21.0  # For deployment
+gunicorn>=20.1,<21.0
 asgiref
 python-dotenv
 PyJWT
@@ -12,12 +12,21 @@ pytz
 sqlparse
 
 # Material processing dependencies
-openai-whisper>=1.0.0  # For speech-to-text
-pytesseract>=0.3.10  # For OCR
-boto3>=1.26.0  # AWS Textract for OCR (if required)
-langchain>=0.0.170  # For content indexing and NLP workflows
+openai-whisper>=1.0.0
+pytesseract>=0.3.10
+boto3>=1.26.0
+langchain>=0.0.170
+langchain_community
+langchain_openai
+langgraph
+chromadb
+sentence-transformers  # For embedding generation
+faiss-cpu  # Optional: For local vector store (if needed for testing)
+graphviz
+matplotlib
+networkx
 
-# Frontend support (if necessary for SSR or API communication)
+# Frontend support
 django-webpack-loader>=1.8,<2.0
 
 # Testing and development tools
@@ -27,5 +36,5 @@ black>=23.0,<24.0
 isort>=5.10,<6.0
 
 # Deployment and security
-django-environ>=0.9,<1.0  # For managing environment variables
-whitenoise>=6.4,<7.0  # For serving static files in production
+django-environ>=0.9,<1.0
+whitenoise>=6.4,<7.0
