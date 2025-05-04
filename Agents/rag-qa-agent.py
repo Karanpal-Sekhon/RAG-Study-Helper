@@ -1,6 +1,7 @@
 import os
-from decouple import config
-os.environ['OPENAI_API_KEY'] = config('OPENAI_API_KEY')
+from dotenv import load_dotenv
+load_dotenv()
+os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY')
 
 
 from langchain_community.document_loaders import PyPDFLoader

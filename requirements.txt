@@ -3,7 +3,7 @@ Django>=4.0,<5.0
 djangorestframework>=3.14,<4.0
 djangorestframework-simplejwt
 django-cors-headers>=3.13,<4.0
-psycopg2>=2.9,<3.0
+psycopg2-binary>=2.9,<3.0  # Use binary package to avoid pg_config requirement
 gunicorn>=20.1,<21.0
 asgiref
 python-dotenv
@@ -12,13 +12,16 @@ pytz
 sqlparse
 
 # Material processing dependencies
-openai-whisper>=1.0.0
+# Note: openai-whisper has many dependencies, comment out if causing install issues
+# openai-whisper>=1.0.0  
 pytesseract>=0.3.10
 boto3>=1.26.0
 langchain>=0.0.170
 langchain_community
 langchain_openai
 langgraph
+typing-extensions  # Required for TypedDict
+tiktoken  # Required for RecursiveCharacterTextSplitter
 chromadb
 sentence-transformers  # For embedding generation
 faiss-cpu  # Optional: For local vector store (if needed for testing)
