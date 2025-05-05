@@ -174,3 +174,4 @@ todo.md
 account_passes.txt
 extra_code.txt
 /media
+**/.claude/settings.local.json
