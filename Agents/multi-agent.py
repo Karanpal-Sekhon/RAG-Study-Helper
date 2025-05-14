@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 from typing_extensions import TypedDict
 
 from langchain_openai import ChatOpenAI
@@ -8,6 +8,10 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 import os
 from dotenv import load_dotenv
 load_dotenv()
+
+# Import the agent factory
+from agent_factory import AgentFactory
+
 # Define agent names
 members = ['rag_qa_agent', 'flashcard_agent', 'exam_agent', 'resource_agent']
 options = members + ['FINISH']
@@ -34,6 +38,23 @@ class Router(TypedDict):
 # Create LLM instances
 llm = ChatOpenAI(model='gpt-3.5-turbo')  # Using cheaper model for routing
 agent_llm = ChatOpenAI(model='gpt-4')  # Using more powerful model for agents
+
+def extract_workspace_id(state: MessagesState) -> Optional[str]:
+    """
+    Extract workspace ID from the message state
+    
+    In a production environment, this would use metadata or session information
+    For now, we'll return None (default workspace)
+    
+    Args:
+        state (MessagesState): The current message state
+        
+    Returns:
+        Optional[str]: The workspace ID or None
+    """
+    # This is a placeholder for where you would extract workspace information
+    # from user metadata, conversation context, or Django session
+    return None
 
 # Node functions
 def preprocessing_node(state: MessagesState) -> MessagesState:
@@ -66,19 +87,21 @@ def rag_qa_node(state: MessagesState) -> MessagesState:
     messages = state["messages"]
     last_message = messages[-1]
     
-    system_prompt = (
-        "You are a RAG-based question answering assistant. Use the retrieved documents "
-        "to answer the user's question accurately and informatively."
-    )
+    # Extract workspace context
+    workspace_id = extract_workspace_id(state)
     
-    # Here you would implement the RAG retrieval logic and pass to LLM
-    # For now just simulating with the agent_llm
-    response = agent_llm.invoke([
-        SystemMessage(content=system_prompt),
-        last_message
-    ])
+    # Get the RAG agent for this workspace
+    rag_agent = AgentFactory.get_agent('rag_qa', workspace_id=workspace_id)
     
-    return {"messages": messages + [AIMessage(content=f"[RAG QA Agent]: {response.content}")]}
+    # Extract the query from the last message
+    query = last_message.content
+    print(f"Processing query with RAG QA Agent: {query}")
+    
+    # Run the RAG agent
+    response = rag_agent.run(query)
+    
+    # Format the response with agent prefix
+    return {"messages": messages + [AIMessage(content=f"[RAG QA Agent]: {response}")]}
 
 def flashcard_node(state: MessagesState) -> MessagesState:
     """Generate flashcards from user's notes"""
@@ -154,12 +177,16 @@ builder.add_edge("resource_agent", END)
 graph = builder.compile()
 
 if __name__ == "__main__":
-    # Example usage
-    user_query = "Create flashcards for chapter 3 of my AI notes"
+    # Example usage for RAG QA querying
+    user_query = "What is the architecture of an encoder-decoder model?"
     messages = [HumanMessage(content=user_query)]
+    
+    print(f"\n=== Processing Query ===")
+    print(f"Query: {user_query}")
     
     # Invoke the graph with the user query
     result = graph.invoke({"messages": messages})
     
     # Print the final response from the agents
+    print("\n=== Agent Response ===")
     print(result["messages"][-1].content)
