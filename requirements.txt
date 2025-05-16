@@ -28,6 +28,7 @@ faiss-cpu  # Optional: For local vector store (if needed for testing)
 graphviz
 matplotlib
 networkx
+pypdf
 
 # Frontend support
 django-webpack-loader>=1.8,<2.0

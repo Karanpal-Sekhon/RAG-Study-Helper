@@ -1,5 +1,12 @@
 from django.urls import path
-from .views import CreateWorkspaceView, WorkspaceDetailView, CreateNoteView, NoteDetailView, CreateVideoView, VideoDetailView, WorkspaceNotesView, WorkspaceVideosView, UploadNoteFileView, UploadVideoFileView, UserWorkspacesView
+from .views import (
+    CreateWorkspaceView, WorkspaceDetailView, 
+    CreateNoteView, NoteDetailView, 
+    CreateVideoView, VideoDetailView, 
+    WorkspaceNotesView, WorkspaceVideosView, 
+    UploadNoteFileView, UploadVideoFileView, 
+    UserWorkspacesView, ChatMessageView
+)
 import uuid
 
 urlpatterns = [
@@ -16,4 +23,7 @@ urlpatterns = [
     path('workspace/<workspace_id>/video/<video_id>/upload_file', UploadVideoFileView.as_view(), name='upload_video_file'),
     path('workspace/<workspace_id>/note/<note_id>/file/<file_id>/delete', UploadNoteFileView.as_view(), name='delete_note_file'),
     path('workspace/<workspace_id>/video/<video_id>/file/<file_id>/delete', UploadVideoFileView.as_view(), name='delete_video_file'),
+    
+    # Chat endpoint for multi-agent processing
+    path('workspace/<uuid:workspace_id>/chat', ChatMessageView.as_view(), name='chat'),
 ]

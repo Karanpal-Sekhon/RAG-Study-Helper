@@ -7,6 +7,39 @@ from users.models import User
 from .serializers import WorkspaceSerializer, NotesSerializer, VideosSerializer, NoteFileSerializer, VideoFileSerializer
 from django.shortcuts import get_object_or_404
 
+# Import the multi-agent system
+import sys
+import os
+import importlib.util
+from pathlib import Path
+
+# Get the project root directory
+project_root = Path(__file__).resolve().parent.parent
+
+# Ensure the Agents directory is in the Python path
+agents_dir = os.path.join(project_root, 'Agents')
+if agents_dir not in sys.path:
+    sys.path.append(agents_dir)
+
+# Import multi-agent and factory
+# Need to fix module name for imports with hyphens
+multi_agent_spec = importlib.util.spec_from_file_location(
+    "multi_agent", 
+    os.path.join(agents_dir, "multi-agent.py")
+)
+multi_agent = importlib.util.module_from_spec(multi_agent_spec)
+sys.modules["multi_agent"] = multi_agent
+multi_agent_spec.loader.exec_module(multi_agent)
+
+# Get the graph from the multi-agent module
+multi_agent_graph = multi_agent.graph
+
+# Import agent factory
+from Agents.agent_factory import AgentFactory
+
+# Import LangChain message types for graph input/output
+from langchain_core.messages import HumanMessage, AIMessage
+
 # Workspace views
 
 class UserWorkspacesView(APIView):
@@ -251,3 +284,63 @@ class UploadVideoFileView(APIView):
         # Delete the video file
         video_file.delete()
         return Response({"message": "File deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+
+# Chat and Multi-Agent Views
+
+class ChatMessageView(APIView):
+    """
+    API endpoint for processing chat messages with the multi-agent system.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, workspace_id):
+        # Verify the workspace exists and user has access
+        workspace = Workspace.objects.filter(id=workspace_id, owner=request.user).first()
+        if not workspace:
+            return Response({"error": "Workspace not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
+            
+        # Get the query from the request
+        message = request.data.get('message')
+        if not message:
+            return Response({"error": "Message is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Create the initial state with the user query
+            state = {"messages": [HumanMessage(content=message)]}
+            
+            # Process through the multi-agent graph
+            result = multi_agent_graph.invoke(state)
+            
+            # Extract the final agent response
+            final_message = result["messages"][-1].content
+            agent_type = "unknown"
+            
+            # Try to extract agent type from response format
+            if "[RAG QA Agent]:" in final_message:
+                agent_type = "rag_qa_agent"
+                final_message = final_message.replace("[RAG QA Agent]: ", "")
+            elif "[Flashcard Agent]:" in final_message:
+                agent_type = "flashcard_agent"
+                final_message = final_message.replace("[Flashcard Agent]: ", "")
+            elif "[Exam Agent]:" in final_message:
+                agent_type = "exam_agent"
+                final_message = final_message.replace("[Exam Agent]: ", "")
+            elif "[Resource Agent]:" in final_message:
+                agent_type = "resource_agent"
+                final_message = final_message.replace("[Resource Agent]: ", "")
+            
+            # Return the response with agent information
+            return Response({
+                "message": final_message,
+                "agent_type": agent_type,
+                "workspace_id": str(workspace_id)
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            # Log the error and return a friendly message
+            print(f"Error processing chat message: {str(e)}")
+            return Response({
+                "error": "An error occurred while processing your message. Please try again later.",
+                "detail": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -22,6 +22,9 @@ urlpatterns = [
     
     # Workspace Management
     path('api/', include('workspace.urls')),  # All workspace-related endpoints
+    
+    # Chat Functionality with Multi-Agent System
+    path('api/', include('chat.urls')),  # All chat-related endpoints
 ]
 
 if settings.DEBUG:

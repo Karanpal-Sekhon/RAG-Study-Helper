@@ -23,9 +23,74 @@ api.interceptors.request.use(
         return config
     },
     (error) => {
-        console.log(request)
+        console.log(error)
         return Promise.reject(error)
     }
 )
+
+// Chat API Functions
+
+/**
+ * Get all chat sessions for a workspace
+ * @param {string} workspaceId - UUID of the workspace
+ * @returns {Promise} - Response with chat sessions
+ */
+export const getChatSessions = (workspaceId) => {
+    return api.get(`api/workspace/${workspaceId}/chat/sessions/`);
+};
+
+/**
+ * Create a new chat session
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} title - Session title (optional)
+ * @returns {Promise} - Response with created session
+ */
+export const createChatSession = (workspaceId, title = "New Chat") => {
+    return api.post(`api/workspace/${workspaceId}/chat/sessions/`, { title });
+};
+
+/**
+ * Get details of a chat session with messages
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} sessionId - UUID of the chat session
+ * @returns {Promise} - Response with session details and messages
+ */
+export const getChatSessionDetails = (workspaceId, sessionId) => {
+    return api.get(`api/workspace/${workspaceId}/chat/session/${sessionId}/`);
+};
+
+/**
+ * Update a chat session (e.g., change title)
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} sessionId - UUID of the chat session
+ * @param {string} title - New title for the session
+ * @returns {Promise} - Response with updated session
+ */
+export const updateChatSession = (workspaceId, sessionId, title) => {
+    return api.put(`api/workspace/${workspaceId}/chat/session/${sessionId}/`, { title });
+};
+
+/**
+ * Delete a chat session
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} sessionId - UUID of the chat session
+ * @returns {Promise} - Response from deletion
+ */
+export const deleteChatSession = (workspaceId, sessionId) => {
+    return api.delete(`api/workspace/${workspaceId}/chat/session/${sessionId}/`);
+};
+
+/**
+ * Send a message to the multi-agent system and get response
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} sessionId - UUID of the chat session
+ * @param {string} message - Message content to send
+ * @returns {Promise} - Response with user and agent messages
+ */
+export const sendChatMessage = (workspaceId, sessionId, message) => {
+    return api.post(`api/workspace/${workspaceId}/chat/session/${sessionId}/message/`, 
+        { message }
+    );
+};
 
 export default api

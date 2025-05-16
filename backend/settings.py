@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'rest_framework', # To enable rest framework
     'users',  # Users/Authentication
     'workspace', # Workspace model for RAG Data
+    'chat',  # Chat functionality with multi-agent system
 ]
 
 MIDDLEWARE = [
