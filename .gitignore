@@ -175,3 +175,4 @@ account_passes.txt
 extra_code.txt
 /media
 **/.claude/settings.local.json
+backend/__pycache__/settings.cpython-312.pyc
