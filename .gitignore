@@ -173,6 +173,7 @@ eg.json
 todo.md
 account_passes.txt
 extra_code.txt
+/docs-to-test-with
 /media
 **/.claude/settings.local.json
 backend/__pycache__/settings.cpython-312.pyc
