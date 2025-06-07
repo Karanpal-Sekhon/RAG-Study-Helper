@@ -174,13 +174,16 @@ class ChatMessageView(APIView):
         
         try:
             # Process the message through the multi-agent system
-            # Create the initial state with the user message
-            state = {"messages": [HumanMessage(content=message_content)]}
+            # Create the initial state with the user message and context
+            state = {
+                "messages": [HumanMessage(content=message_content)],
+                "workspace_id": str(workspace_id),
+                "session_id": str(session_id)
+            }
             
-            # Add workspace_id for context in the multi-agent system
-            state["workspace_id"] = str(workspace_id)
+            print(f"Processing message for workspace {workspace_id}, session {session_id}: {message_content[:100]}...")
             
-            # Process the message
+            # Process the message through the multi-agent system
             result = multi_agent_graph.invoke(state)
             
             # Extract the final message

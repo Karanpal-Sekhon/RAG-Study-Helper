@@ -24,59 +24,87 @@ RAGQAAgent = rag_qa_agent.RAGQAAgent
 # Internal cache of agent instances by workspace_id
 _rag_agents: Dict[str, RAGQAAgent] = {}
 
-def get_document_paths(workspace_id: Optional[str] = None) -> List[str]:
+# Utility function for external cache management
+def get_cached_agent_workspaces() -> List[str]:
     """
-    Get document paths for a specific workspace
+    Get list of workspace IDs that have cached agents
+    
+    Returns:
+        List[str]: List of workspace IDs with cached agents
+    """
+    return list(_rag_agents.keys())
+
+def get_workspace_document_count(workspace_id: str) -> int:
+    """
+    Get the count of documents in a workspace (for validation)
     
     Args:
-        workspace_id (str, optional): The workspace ID
+        workspace_id (str): The workspace ID
         
     Returns:
-        List[str]: List of document paths
+        int: Number of documents in the workspace
     """
-    # In production, this would query your Django models
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
-    # For demo purposes - in production, query workspace models
-    document_paths = [
-        os.path.join(base_dir, 'media', 'notes', 'Generative_AI_and_LLMs_0l9ocL6.pdf')
-    ]
-    
-    print(f"Loading documents for workspace {workspace_id} from: {document_paths}")
-    
-    return document_paths
+    try:
+        # Import here to avoid circular imports
+        import sys
+        import os
+        
+        # Add the project root to Python path
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if project_root not in sys.path:
+            sys.path.append(project_root)
+        
+        from workspace.models import Notes, Videos
+        
+        notes_count = Notes.objects.filter(workspace_id=workspace_id).count()
+        videos_count = Videos.objects.filter(workspace_id=workspace_id).count()
+        
+        return notes_count + videos_count
+        
+    except Exception as e:
+        print(f"Error getting document count for workspace {workspace_id}: {e}")
+        return 0
 
-def get_agent(workspace_id: Optional[str] = None, model_name: str = "gpt-4o") -> RAGQAAgent:
+def get_agent(workspace_id: str, model_name: str = "gpt-4o") -> RAGQAAgent:
     """
     Get or create a RAG QA Agent for the specified workspace
     
     Args:
-        workspace_id (str, optional): The workspace ID
+        workspace_id (str): The workspace ID (required)
         model_name (str, optional): The model to use for the agent
         
     Returns:
         RAGQAAgent: The agent instance for the workspace
+        
+    Raises:
+        ValueError: If workspace_id is None or empty
     """
-    # Use 'default' for None to ensure consistent key type
-    cache_key = workspace_id if workspace_id is not None else 'default'
+    if not workspace_id:
+        raise ValueError("workspace_id is required for RAG QA Agent")
+        
+    cache_key = workspace_id
     
     # Create and initialize agent if not in cache
     if cache_key not in _rag_agents:
-        print(f"Initializing RAG QA Agent for workspace: {workspace_id}")
+        print(f"Creating RAG QA Agent for workspace: {workspace_id}")
         
-        # Get document paths for the workspace
-        file_paths = get_document_paths(workspace_id)
+        # Check if workspace has documents
+        doc_count = get_workspace_document_count(workspace_id)
+        if doc_count == 0:
+            print(f"Warning: Workspace {workspace_id} has no documents. Agent may not provide meaningful responses.")
         
-        # Create new agent
-        agent = RAGQAAgent(model_name=model_name)
+        # Create new agent with workspace context
+        agent = RAGQAAgent(workspace_id=workspace_id, model_name=model_name)
         
-        # Load documents and initialize vectorstore
-        documents = agent.load_documents(file_paths)
-        agent.initialize_vectorstore(documents)
+        # Initialize agent for the workspace (uses vector store manager)
+        agent.initialize_for_workspace()
+        
+        if not agent.initialized:
+            print(f"Warning: RAG QA Agent failed to initialize for workspace {workspace_id}")
         
         # Cache the agent
         _rag_agents[cache_key] = agent
-        print(f"RAG QA Agent initialized and cached for workspace: {workspace_id}")
+        print(f"RAG QA Agent cached for workspace: {workspace_id}")
     
     return _rag_agents[cache_key]
 
@@ -91,11 +119,30 @@ def clear_agent_cache(workspace_id: Optional[str] = None):
     
     if workspace_id is not None:
         # Clear specific workspace
-        cache_key = workspace_id if workspace_id is not None else 'default'
-        if cache_key in _rag_agents:
-            del _rag_agents[cache_key]
+        if workspace_id in _rag_agents:
+            del _rag_agents[workspace_id]
             print(f"Cleared RAG QA Agent cache for workspace: {workspace_id}")
+        else:
+            print(f"No cached agent found for workspace: {workspace_id}")
     else:
         # Clear all workspaces
         _rag_agents = {}
         print("Cleared all RAG QA Agent caches")
+
+
+def refresh_agent_for_workspace(workspace_id: str, model_name: str = "gpt-4o") -> RAGQAAgent:
+    """
+    Force refresh the agent for a workspace (useful when documents are updated)
+    
+    Args:
+        workspace_id (str): The workspace ID
+        model_name (str, optional): The model to use for the agent
+        
+    Returns:
+        RAGQAAgent: The refreshed agent instance
+    """
+    # Clear the cached agent
+    clear_agent_cache(workspace_id)
+    
+    # Get a new agent (this will create and cache a fresh instance)
+    return get_agent(workspace_id, model_name)

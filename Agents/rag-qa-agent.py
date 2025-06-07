@@ -37,69 +37,56 @@ class AgentState(TypedDict):
 
 
 class RAGQAAgent:
-    def __init__(self, model_name="gpt-4o"):
-        """Initialize the RAG QA Agent with specified model"""
+    def __init__(self, workspace_id: str, model_name="gpt-4o"):
+        """Initialize the RAG QA Agent with workspace context and specified model"""
+        self.workspace_id = workspace_id
         self.model_name = model_name
         self.vectorstore = None
         self.retriever = None
         self.retriever_tool = None
         self.tools = None
         self.graph = None
+        self.initialized = False
         
-    def load_documents(self, file_paths: List[str]):
+    def initialize_for_workspace(self):
         """
-        Load documents from provided file paths
-        
-        Args:
-            file_paths (list): List of paths to PDF files
+        Initialize the RAG agent with workspace-specific retriever from vector store manager
+        """
+        try:
+            # Import here to avoid circular imports
+            import sys
+            import os
             
-        Returns:
-            list: Loaded documents
-        """
-        documents = []
-        for file_path in file_paths:
-            print(f"Loading PDF from: {file_path}")
-            loader = PyPDFLoader(file_path)
-            documents.extend(loader.load())
+            # Add the project root to Python path
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            if project_root not in sys.path:
+                sys.path.append(project_root)
             
-        return documents
-        
-    def initialize_vectorstore(self, documents):
-        """
-        Initialize the vectorstore with provided documents
-        
-        Args:
-            documents (list): List of document objects
+            from workspace.vector_store_manager import vector_store_manager
             
-        Returns:
-            retriever: The initialized retriever
-        """
-        text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-            chunk_size=500, chunk_overlap=50
-        )
-        doc_splits = text_splitter.split_documents(documents)
-        
-        # Create vectorstore
-        self.vectorstore = Chroma.from_documents(
-            documents=doc_splits,
-            collection_name="rag-chroma",
-            embedding=OpenAIEmbeddings(),
-        )
-        self.retriever = self.vectorstore.as_retriever()
-        
-        # Create retriever tool
-        self.retriever_tool = create_retriever_tool(
-            self.retriever,
-            "retrieve_info",
-            "Search and return information from the provided documents",
-        )
-        
-        self.tools = [self.retriever_tool]
-        
-        # Initialize graph
-        self._setup_graph()
-        
-        return self.retriever
+            # Get workspace-specific retriever
+            self.retriever = vector_store_manager.get_retriever_for_workspace(
+                self.workspace_id
+            )
+            
+            # Create retriever tool
+            self.retriever_tool = create_retriever_tool(
+                self.retriever,
+                "retrieve_workspace_info",
+                f"Search information from workspace {self.workspace_id} documents. Use this tool to find relevant context before answering questions."
+            )
+            
+            self.tools = [self.retriever_tool]
+            
+            # Initialize the workflow graph
+            self._setup_graph()
+            
+            self.initialized = True
+            print(f"RAG QA Agent initialized for workspace: {self.workspace_id}")
+            
+        except Exception as e:
+            print(f"Error initializing RAG agent for workspace {self.workspace_id}: {e}")
+            self.initialized = False
     
     def grade_documents(self, state):
         """
@@ -306,38 +293,42 @@ class RAGQAAgent:
         Returns:
             str: The final response from the agent
         """
-        if not self.graph:
-            raise ValueError("Graph not initialized. Load documents first.")
+        if not self.initialized or not self.graph:
+            return f"Error: RAG agent not properly initialized for workspace {self.workspace_id}"
             
-        # Create initial state with the user's query
-        state = {"messages": [HumanMessage(content=query)]}
-        
-        # Execute the graph with the initial state
-        result = self.graph.invoke(state)
-        
-        # Return the final message content
-        return result["messages"][-1].content
+        try:
+            # Create initial state with the user's query
+            state = {"messages": [HumanMessage(content=query)]}
+            
+            # Execute the graph with the initial state
+            result = self.graph.invoke(state)
+            
+            # Return the final message content
+            return result["messages"][-1].content
+            
+        except Exception as e:
+            print(f"Error running RAG agent for workspace {self.workspace_id}: {e}")
+            return f"I'm sorry, I encountered an error while searching for information about your question. Please try again."
 
 
 # For standalone usage and demo
-def run_rag_agent_demo():
-    """Run a demo of the RAG QA Agent"""
-    # Use absolute path to avoid path issues
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    pdf_path = os.path.join(base_dir, 'media', 'notes', 'Generative_AI_and_LLMs_0l9ocL6.pdf')
+def run_rag_agent_demo(workspace_id: str = "demo_workspace"):
+    """Run a demo of the RAG QA Agent with workspace context"""
+    print("\n=== RAG-QA Agent Demo ===")
+    print(f"Workspace ID: {workspace_id}")
     
-    # Initialize the agent
-    agent = RAGQAAgent(model_name="gpt-4o")
+    # Initialize the agent with workspace context
+    agent = RAGQAAgent(workspace_id=workspace_id, model_name="gpt-4o")
     
-    # Load documents
-    documents = agent.load_documents([pdf_path])
+    # Initialize for workspace (this will use the vector store manager)
+    agent.initialize_for_workspace()
     
-    # Initialize vectorstore
-    agent.initialize_vectorstore(documents)
+    if not agent.initialized:
+        print("Error: Agent could not be initialized. Make sure documents are uploaded to the workspace.")
+        return "Agent initialization failed"
     
     # Demo with a test question
     test_question = "What is quantum chromodynamics?"
-    print("\n=== RAG-QA Agent Demo ===")
     print(f"Question: {test_question}")
     print("\nProcessing...")
     

@@ -6,6 +6,7 @@ from .models import Workspace, Notes, Videos, NoteFile, VideoFile
 from users.models import User
 from .serializers import WorkspaceSerializer, NotesSerializer, VideosSerializer, NoteFileSerializer, VideoFileSerializer
 from django.shortcuts import get_object_or_404
+from .vector_store_manager import vector_store_manager
 
 # Import the multi-agent system
 import sys
@@ -87,6 +88,20 @@ class WorkspaceDetailView(APIView):
         if not workspace:
             return Response({"error": "Workspace not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
 
+        # Clear the workspace vectorstore before deleting
+        try:
+            vector_store_manager.clear_workspace(str(workspace_id))
+            print(f"Cleared vectorstore for workspace {workspace_id}")
+        except Exception as e:
+            print(f"Error clearing vectorstore for workspace {workspace_id}: {e}")
+
+        # Clear agent cache for this workspace
+        try:
+            from Agents.rag_agent_manager import clear_agent_cache
+            clear_agent_cache(str(workspace_id))
+        except Exception as e:
+            print(f"Error clearing agent cache for workspace {workspace_id}: {e}")
+
         # Delete the workspace
         workspace.delete()
         return Response({"message": "Workspace deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
@@ -135,7 +150,18 @@ class CreateNoteView(APIView):
         }
         serializer = NotesSerializer(data = data)
         if serializer.is_valid():
-            serializer.save()
+            note = serializer.save()
+            
+            # If there's initial text content, add to vectorstore
+            if hasattr(note, 'file_text') and note.file_text and note.file_text.strip():
+                try:
+                    vector_store_manager.add_document_to_workspace(
+                        workspace_id=str(workspace_id),
+                        document_obj=note
+                    )
+                    print(f"Added note {note.id} to vectorstore for workspace {workspace_id}")
+                except Exception as e:
+                    print(f"Error adding note {note.id} to vectorstore: {e}")
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -158,6 +184,23 @@ class NoteDetailView(APIView):
         note = Notes.objects.filter(id=note_id, workspace__id=workspace_id, workspace__owner=request.user).first()
         if not note:
             return Response({"error": "Note not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Remove from vectorstore before deleting
+        try:
+            vector_store_manager.remove_document_from_workspace(
+                workspace_id=str(workspace_id),
+                document_id=str(note_id)
+            )
+            print(f"Removed note {note_id} from vectorstore for workspace {workspace_id}")
+        except Exception as e:
+            print(f"Error removing note {note_id} from vectorstore: {e}")
+
+        # Clear agent cache to force refresh with updated vectorstore
+        try:
+            from Agents.rag_agent_manager import clear_agent_cache
+            clear_agent_cache(str(workspace_id))
+        except Exception as e:
+            print(f"Error clearing agent cache for workspace {workspace_id}: {e}")
 
         # Delete the note
         note.delete()
@@ -187,8 +230,27 @@ class UploadNoteFileView(APIView):
             if serializer.is_valid():
                 created_file = serializer.save(note=note)  # Pass the note instance directly
                 created_files.append(created_file)
+                
+                # Add the file to the vectorstore
+                try:
+                    vector_store_manager.add_file_to_workspace(
+                        workspace_id=str(workspace_id),
+                        file_obj=created_file,
+                        parent_document_obj=note
+                    )
+                    print(f"Added file {created_file.file.name} to vectorstore for workspace {workspace_id}")
+                except Exception as e:
+                    print(f"Error adding file {created_file.file.name} to vectorstore: {e}")
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Clear agent cache to force refresh with updated vectorstore
+        if created_files:
+            try:
+                from Agents.rag_agent_manager import clear_agent_cache
+                clear_agent_cache(str(workspace_id))
+            except Exception as e:
+                print(f"Error clearing agent cache for workspace {workspace_id}: {e}")
 
         # Serialize and return the created files
         serialized_files = NoteFileSerializer(created_files, many=True)
@@ -200,8 +262,28 @@ class UploadNoteFileView(APIView):
         if not note_file:
             return Response({"error": "File not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Delete the note file
+        # Remove just this file from vectorstore
+        try:
+            # Remove the specific file from vectorstore
+            vector_store_manager.remove_file_from_workspace(
+                workspace_id=str(workspace_id),
+                file_id=str(file_id)
+            )
+            
+            print(f"Removed file {file_id} from vectorstore for workspace {workspace_id}")
+        except Exception as e:
+            print(f"Error removing file {file_id} from vectorstore: {e}")
+        
+        # Delete the file from database
         note_file.delete()
+
+        # Clear agent cache to force refresh
+        try:
+            from Agents.rag_agent_manager import clear_agent_cache
+            clear_agent_cache(str(workspace_id))
+        except Exception as e:
+            print(f"Error clearing agent cache for workspace {workspace_id}: {e}")
+
         return Response({"message": "File deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 # Video views
@@ -221,7 +303,18 @@ class CreateVideoView(APIView):
         }
         serializer = VideosSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            video = serializer.save()
+            
+            # If there's initial transcription content, add to vectorstore
+            if hasattr(video, 'transcription') and video.transcription and video.transcription.strip():
+                try:
+                    vector_store_manager.add_document_to_workspace(
+                        workspace_id=str(workspace_id),
+                        document_obj=video
+                    )
+                    print(f"Added video {video.id} to vectorstore for workspace {workspace_id}")
+                except Exception as e:
+                    print(f"Error adding video {video.id} to vectorstore: {e}")
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -242,6 +335,23 @@ class VideoDetailView(APIView):
         video = Videos.objects.filter(id=video_id, workspace__id=workspace_id, workspace__owner=request.user).first()
         if not video:
             return Response({"error": "Video not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Remove from vectorstore before deleting
+        try:
+            vector_store_manager.remove_document_from_workspace(
+                workspace_id=str(workspace_id),
+                document_id=str(video_id)
+            )
+            print(f"Removed video {video_id} from vectorstore for workspace {workspace_id}")
+        except Exception as e:
+            print(f"Error removing video {video_id} from vectorstore: {e}")
+
+        # Clear agent cache to force refresh with updated vectorstore
+        try:
+            from Agents.rag_agent_manager import clear_agent_cache
+            clear_agent_cache(str(workspace_id))
+        except Exception as e:
+            print(f"Error clearing agent cache for workspace {workspace_id}: {e}")
 
         # Delete the video
         video.delete()
@@ -268,8 +378,27 @@ class UploadVideoFileView(APIView):
             if serializer.is_valid():
                 created_file = serializer.save(video=video)  # Pass the video instance directly
                 created_files.append(created_file)
+                
+                # Add the file to the vectorstore (for video transcription)
+                try:
+                    vector_store_manager.add_file_to_workspace(
+                        workspace_id=str(workspace_id),
+                        file_obj=created_file,
+                        parent_document_obj=video
+                    )
+                    print(f"Added video file {created_file.file.name} to vectorstore for workspace {workspace_id}")
+                except Exception as e:
+                    print(f"Error adding video file {created_file.file.name} to vectorstore: {e}")
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Clear agent cache to force refresh with updated vectorstore
+        if created_files:
+            try:
+                from Agents.rag_agent_manager import clear_agent_cache
+                clear_agent_cache(str(workspace_id))
+            except Exception as e:
+                print(f"Error clearing agent cache for workspace {workspace_id}: {e}")
 
         # Serialize and return the created files
         serialized_files = VideoFileSerializer(created_files, many=True)
@@ -281,8 +410,28 @@ class UploadVideoFileView(APIView):
         if not video_file:
             return Response({"error": "File not found or not accessible."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Delete the video file
+        # Remove just this file from vectorstore
+        try:
+            # Remove the specific file from vectorstore
+            vector_store_manager.remove_file_from_workspace(
+                workspace_id=str(workspace_id),
+                file_id=str(file_id)
+            )
+            
+            print(f"Removed video file {file_id} from vectorstore for workspace {workspace_id}")
+        except Exception as e:
+            print(f"Error removing video file {file_id} from vectorstore: {e}")
+        
+        # Delete the file from database
         video_file.delete()
+
+        # Clear agent cache to force refresh
+        try:
+            from Agents.rag_agent_manager import clear_agent_cache
+            clear_agent_cache(str(workspace_id))
+        except Exception as e:
+            print(f"Error clearing agent cache for workspace {workspace_id}: {e}")
+
         return Response({"message": "File deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -306,8 +455,14 @@ class ChatMessageView(APIView):
             return Response({"error": "Message is required."}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            # Create the initial state with the user query
-            state = {"messages": [HumanMessage(content=message)]}
+            # Create the initial state with the user query and workspace context
+            state = {
+                "messages": [HumanMessage(content=message)],
+                "workspace_id": str(workspace_id),
+                "session_id": "direct_workspace_chat"  # For direct workspace chat without sessions
+            }
+            
+            print(f"Processing direct workspace message for workspace {workspace_id}: {message[:100]}...")
             
             # Process through the multi-agent graph
             result = multi_agent_graph.invoke(state)

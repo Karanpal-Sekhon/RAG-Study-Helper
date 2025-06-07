@@ -1,10 +1,11 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, Annotated, Sequence
 from typing_extensions import TypedDict
 
 from langchain_openai import ChatOpenAI
-from langgraph.graph import MessagesState, StateGraph, START, END 
+from langgraph.graph import StateGraph, START, END 
+from langgraph.graph.message import add_messages
 from langgraph.types import Command
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -32,6 +33,12 @@ preprocessing_prompt = (
     "and any specific parameters for the request."
 )
 
+# Define our extended state that includes workspace and session context
+class WorkspaceMessagesState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], add_messages]
+    workspace_id: Optional[str]
+    session_id: Optional[str]
+
 class Router(TypedDict):
     next: Literal['rag_qa_agent', 'flashcard_agent', 'exam_agent', 'resource_agent', 'FINISH']
 
@@ -39,25 +46,34 @@ class Router(TypedDict):
 llm = ChatOpenAI(model='gpt-3.5-turbo')  # Using cheaper model for routing
 agent_llm = ChatOpenAI(model='gpt-4')  # Using more powerful model for agents
 
-def extract_workspace_id(state: MessagesState) -> Optional[str]:
+def extract_workspace_id(state: WorkspaceMessagesState) -> Optional[str]:
     """
     Extract workspace ID from the message state
     
-    In a production environment, this would use metadata or session information
-    For now, we'll return None (default workspace)
-    
     Args:
-        state (MessagesState): The current message state
+        state (WorkspaceMessagesState): The current message state
         
     Returns:
         Optional[str]: The workspace ID or None
     """
-    # This is a placeholder for where you would extract workspace information
-    # from user metadata, conversation context, or Django session
-    return None
+    # Extract workspace_id from the state
+    return state.get("workspace_id")
+
+def extract_session_id(state: WorkspaceMessagesState) -> Optional[str]:
+    """
+    Extract session ID (thread_id) from the message state
+    
+    Args:
+        state (WorkspaceMessagesState): The current message state
+        
+    Returns:
+        Optional[str]: The session ID or None
+    """
+    # Extract session_id from the state
+    return state.get("session_id")
 
 # Node functions
-def preprocessing_node(state: MessagesState) -> MessagesState:
+def preprocessing_node(state: WorkspaceMessagesState) -> WorkspaceMessagesState:
     """Process the user query for clarity and parameter extraction"""
     messages = state["messages"]
     last_message = messages[-1]
@@ -68,7 +84,7 @@ def preprocessing_node(state: MessagesState) -> MessagesState:
         return {"messages": messages + [response]}
     return state
 
-def delegation_node(state: MessagesState) -> Command[Literal['rag_qa_agent', 'flashcard_agent', 'exam_agent', 'resource_agent', '__end__']]: 
+def delegation_node(state: WorkspaceMessagesState) -> Command[Literal['rag_qa_agent', 'flashcard_agent', 'exam_agent', 'resource_agent', '__end__']]: 
     """Route to the appropriate agent based on the query"""
     messages = [
         {"role": "system", "content": delegation_prompt},
@@ -82,36 +98,57 @@ def delegation_node(state: MessagesState) -> Command[Literal['rag_qa_agent', 'fl
     return Command(goto=goto)
 
 # Agent node functions
-def rag_qa_node(state: MessagesState) -> MessagesState:
-    """Answer questions using RAG from user's notes"""
+def rag_qa_node(state: WorkspaceMessagesState) -> WorkspaceMessagesState:
+    """Answer questions using workspace-specific RAG from user's notes"""
+    messages = state["messages"]
+    last_message = messages[-1]
+    
+    # Extract workspace and session context
+    workspace_id = extract_workspace_id(state)
+    session_id = extract_session_id(state)
+    
+    if not workspace_id:
+        error_msg = "Error: No workspace context provided for RAG query"
+        print(error_msg)
+        return {"messages": messages + [AIMessage(content=f"[RAG QA Agent]: {error_msg}")]}
+    
+    try:
+        # Get the workspace-specific RAG agent
+        rag_agent = AgentFactory.get_agent('rag_qa', workspace_id=workspace_id)
+        
+        # Extract the query from the last message
+        query = last_message.content
+        print(f"Processing query with RAG QA Agent for workspace {workspace_id}, session {session_id}: {query}")
+        
+        # Run the RAG agent
+        response = rag_agent.run(query)
+        
+        # Format the response with agent prefix
+        return {"messages": messages + [AIMessage(content=f"[RAG QA Agent]: {response}")]}
+        
+    except Exception as e:
+        error_msg = f"Error processing RAG query for workspace {workspace_id}: {str(e)}"
+        print(error_msg)
+        return {"messages": messages + [AIMessage(content=f"[RAG QA Agent]: I'm sorry, I encountered an error while searching your documents. Please try again.")]}
+
+def flashcard_node(state: WorkspaceMessagesState) -> WorkspaceMessagesState:
+    """Generate flashcards from workspace-specific user's notes"""
     messages = state["messages"]
     last_message = messages[-1]
     
     # Extract workspace context
     workspace_id = extract_workspace_id(state)
+    session_id = extract_session_id(state)
     
-    # Get the RAG agent for this workspace
-    rag_agent = AgentFactory.get_agent('rag_qa', workspace_id=workspace_id)
-    
-    # Extract the query from the last message
-    query = last_message.content
-    print(f"Processing query with RAG QA Agent: {query}")
-    
-    # Run the RAG agent
-    response = rag_agent.run(query)
-    
-    # Format the response with agent prefix
-    return {"messages": messages + [AIMessage(content=f"[RAG QA Agent]: {response}")]}
-
-def flashcard_node(state: MessagesState) -> MessagesState:
-    """Generate flashcards from user's notes"""
-    messages = state["messages"]
-    last_message = messages[-1]
+    workspace_context = f" for workspace {workspace_id}" if workspace_id else ""
     
     system_prompt = (
-        "You are a flashcard generation assistant. Create effective flashcards "
-        "based on the user's notes and request."
+        f"You are a flashcard generation assistant{workspace_context}. Create effective flashcards "
+        "based on the user's notes and request. Focus on the key concepts and important information "
+        "that would be valuable for studying."
     )
+    
+    print(f"Processing flashcard request for workspace {workspace_id}, session {session_id}")
     
     response = agent_llm.invoke([
         SystemMessage(content=system_prompt),
@@ -120,15 +157,24 @@ def flashcard_node(state: MessagesState) -> MessagesState:
     
     return {"messages": messages + [AIMessage(content=f"[Flashcard Agent]: {response.content}")]}
 
-def exam_node(state: MessagesState) -> MessagesState:
-    """Generate practice exam questions"""
+def exam_node(state: WorkspaceMessagesState) -> WorkspaceMessagesState:
+    """Generate practice exam questions from workspace-specific content"""
     messages = state["messages"]
     last_message = messages[-1]
     
+    # Extract workspace context
+    workspace_id = extract_workspace_id(state)
+    session_id = extract_session_id(state)
+    
+    workspace_context = f" for workspace {workspace_id}" if workspace_id else ""
+    
     system_prompt = (
-        "You are an exam generation assistant. Create appropriate exam questions "
-        "and answers based on the user's notes and request."
+        f"You are an exam generation assistant{workspace_context}. Create appropriate exam questions "
+        "and answers based on the user's notes and request. Include a variety of question types "
+        "(multiple choice, short answer, essay) and provide detailed answer explanations."
     )
+    
+    print(f"Processing exam generation request for workspace {workspace_id}, session {session_id}")
     
     response = agent_llm.invoke([
         SystemMessage(content=system_prompt),
@@ -137,15 +183,24 @@ def exam_node(state: MessagesState) -> MessagesState:
     
     return {"messages": messages + [AIMessage(content=f"[Exam Agent]: {response.content}")]}
 
-def resource_node(state: MessagesState) -> MessagesState:
-    """Generate additional learning resources"""
+def resource_node(state: WorkspaceMessagesState) -> WorkspaceMessagesState:
+    """Generate additional learning resources based on workspace content"""
     messages = state["messages"]
     last_message = messages[-1]
     
+    # Extract workspace context
+    workspace_id = extract_workspace_id(state)
+    session_id = extract_session_id(state)
+    
+    workspace_context = f" for workspace {workspace_id}" if workspace_id else ""
+    
     system_prompt = (
-        "You are a resource generation assistant. Recommend additional learning resources "
-        "based on the user's topic and learning goals."
+        f"You are a resource generation assistant{workspace_context}. Recommend additional learning resources "
+        "based on the user's topic and learning goals. Suggest relevant books, articles, videos, "
+        "online courses, and other educational materials that complement their current study materials."
     )
+    
+    print(f"Processing resource recommendation request for workspace {workspace_id}, session {session_id}")
     
     response = agent_llm.invoke([
         SystemMessage(content=system_prompt),
@@ -155,7 +210,7 @@ def resource_node(state: MessagesState) -> MessagesState:
     return {"messages": messages + [AIMessage(content=f"[Resource Agent]: {response.content}")]}
 
 # Build the graph
-builder = StateGraph(MessagesState)
+builder = StateGraph(WorkspaceMessagesState)
 
 # Add nodes
 builder.add_node("preprocessing", preprocessing_node)
@@ -177,15 +232,27 @@ builder.add_edge("resource_agent", END)
 graph = builder.compile()
 
 if __name__ == "__main__":
-    # Example usage for RAG QA querying
+    # Example usage for workspace-specific RAG QA querying
     user_query = "What is the architecture of an encoder-decoder model?"
+    test_workspace_id = "test_workspace_123"
+    test_session_id = "test_session_456"
+    
     messages = [HumanMessage(content=user_query)]
     
     print(f"\n=== Processing Query ===")
     print(f"Query: {user_query}")
+    print(f"Workspace ID: {test_workspace_id}")
+    print(f"Session ID: {test_session_id}")
     
-    # Invoke the graph with the user query
-    result = graph.invoke({"messages": messages})
+    # Create state with workspace and session context
+    state = {
+        "messages": messages,
+        "workspace_id": test_workspace_id,
+        "session_id": test_session_id
+    }
+    
+    # Invoke the graph with the user query and context
+    result = graph.invoke(state)
     
     # Print the final response from the agents
     print("\n=== Agent Response ===")
