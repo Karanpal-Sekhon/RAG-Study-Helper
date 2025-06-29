@@ -93,4 +93,160 @@ export const sendChatMessage = (workspaceId, sessionId, message) => {
     );
 };
 
+// Notes API Functions
+
+/**
+ * Get all notes for a workspace
+ * @param {string} workspaceId - UUID of the workspace
+ * @returns {Promise} - Response with notes list
+ */
+export const getNotes = (workspaceId) => {
+    return api.get(`api/workspace/${workspaceId}/notes`);
+};
+
+/**
+ * Create a new note
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} title - Note title
+ * @param {string} content - Note content (optional for file-only notes)
+ * @returns {Promise} - Response with created note
+ */
+export const createNote = (workspaceId, title, content = "") => {
+    return api.post(`api/workspace/${workspaceId}/create_note`, { 
+        title, 
+        content 
+    });
+};
+
+/**
+ * Get details of a specific note
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} noteId - UUID of the note
+ * @returns {Promise} - Response with note details
+ */
+export const getNoteDetails = (workspaceId, noteId) => {
+    return api.get(`api/workspace/${workspaceId}/note/${noteId}`);
+};
+
+/**
+ * Delete a note
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} noteId - UUID of the note
+ * @returns {Promise} - Response from deletion
+ */
+export const deleteNote = (workspaceId, noteId) => {
+    return api.delete(`api/workspace/${workspaceId}/note/${noteId}`);
+};
+
+/**
+ * Upload file(s) to a note
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} noteId - UUID of the note
+ * @param {FileList|File[]} files - Files to upload
+ * @returns {Promise} - Response from file upload
+ */
+export const uploadNoteFiles = (workspaceId, noteId, files) => {
+    const formData = new FormData();
+    
+    // Handle both FileList and array of files
+    const fileArray = Array.from(files);
+    fileArray.forEach(file => {
+        formData.append('files', file);
+    });
+    
+    return api.post(`api/workspace/${workspaceId}/note/${noteId}/upload_file`, formData, {
+        headers: { 
+            'Content-Type': 'multipart/form-data' 
+        }
+    });
+};
+
+/**
+ * Delete a specific file from a note
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} noteId - UUID of the note
+ * @param {string} fileId - UUID of the file
+ * @returns {Promise} - Response from file deletion
+ */
+export const deleteNoteFile = (workspaceId, noteId, fileId) => {
+    return api.delete(`api/workspace/${workspaceId}/note/${noteId}/file/${fileId}/delete`);
+};
+
+// Videos API Functions
+
+/**
+ * Get all videos for a workspace
+ * @param {string} workspaceId - UUID of the workspace
+ * @returns {Promise} - Response with videos list
+ */
+export const getVideos = (workspaceId) => {
+    return api.get(`api/workspace/${workspaceId}/videos`);
+};
+
+/**
+ * Create a new video
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} title - Video title
+ * @returns {Promise} - Response with created video
+ */
+export const createVideo = (workspaceId, title) => {
+    return api.post(`api/workspace/${workspaceId}/create_video`, { 
+        title 
+    });
+};
+
+/**
+ * Get details of a specific video
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} videoId - UUID of the video
+ * @returns {Promise} - Response with video details
+ */
+export const getVideoDetails = (workspaceId, videoId) => {
+    return api.get(`api/workspace/${workspaceId}/video/${videoId}`);
+};
+
+/**
+ * Delete a video
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} videoId - UUID of the video
+ * @returns {Promise} - Response from deletion
+ */
+export const deleteVideo = (workspaceId, videoId) => {
+    return api.delete(`api/workspace/${workspaceId}/video/${videoId}`);
+};
+
+/**
+ * Upload file(s) to a video
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} videoId - UUID of the video
+ * @param {FileList|File[]} files - Video files to upload
+ * @returns {Promise} - Response from file upload
+ */
+export const uploadVideoFiles = (workspaceId, videoId, files) => {
+    const formData = new FormData();
+    
+    // Handle both FileList and array of files
+    const fileArray = Array.from(files);
+    fileArray.forEach(file => {
+        formData.append('files', file);
+    });
+    
+    return api.post(`api/workspace/${workspaceId}/video/${videoId}/upload_file`, formData, {
+        headers: { 
+            'Content-Type': 'multipart/form-data' 
+        }
+    });
+};
+
+/**
+ * Delete a specific file from a video
+ * @param {string} workspaceId - UUID of the workspace
+ * @param {string} videoId - UUID of the video
+ * @param {string} fileId - UUID of the file
+ * @returns {Promise} - Response from file deletion
+ */
+export const deleteVideoFile = (workspaceId, videoId, fileId) => {
+    return api.delete(`api/workspace/${workspaceId}/video/${videoId}/file/${fileId}/delete`);
+};
+
 export default api

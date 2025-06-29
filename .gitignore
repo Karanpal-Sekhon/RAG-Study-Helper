@@ -178,3 +178,5 @@ extra_code.txt
 /media
 **/.claude/settings.local.json
 backend/__pycache__/settings.cpython-312.pyc
+/class-craft-chat-main
+ideas.txt

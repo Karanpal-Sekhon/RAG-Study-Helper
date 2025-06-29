@@ -1,7 +1,6 @@
 import react from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/protectedroute";
@@ -14,7 +13,7 @@ function Logout() {
 
 function RegisterandLogout() {
   localStorage.clear(); // clear the local storage so that we do not have any old access tokens lingering
-  return <Register />;
+  return <Login />;
 }
 
 function App() {
