@@ -7,12 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { useUser } from "@/hooks/useUser";
 
 const Home = () => {
   const [workspaces, setWorkspaces] = useState([]);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const navigate = useNavigate();
+  // Get user information for profile display
+  const { user, getProfileImageUrl, getUserInitials } = useUser();
 
   useEffect(() => {
     fetchWorkspaces();
@@ -87,9 +90,28 @@ const Home = () => {
               <LogOut className="h-4 w-4 mr-2" />
               LOGOUT
             </Button>
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-indigo-200">
-              <User className="h-5 w-5 text-indigo-600" />
+            <div className="flex items-center space-x-3 pl-4 border-l border-gray-200/50">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                  {getProfileImageUrl() ? (
+                    <img 
+                      src={getProfileImageUrl()} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">
+                        {getUserInitials()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+            {/* <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-indigo-200">
+              <User className="h-5 w-5 text-indigo-600" />
+            </div> */}
           </div>
         </div>
       </header>

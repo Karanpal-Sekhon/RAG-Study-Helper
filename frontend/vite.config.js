@@ -10,4 +10,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    host: true, // Allow external connections
+    port: 5173,
+    watch: {
+      usePolling: true, // Fix for WSL2 file watching
+    },
+  },
 })

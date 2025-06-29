@@ -4,7 +4,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { BookOpen, Lightbulb, Eye, EyeOff, Loader2 } from "lucide-react";
+import { BookOpen, Lightbulb, Eye, EyeOff, Loader2, Upload, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
@@ -13,10 +13,31 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [registerData, setRegisterData] = useState({ username: '', email: '', password: '', confirmPassword: '' });
+  const [profileImage, setProfileImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError("Please select a valid image file.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image must be smaller than 5MB.");
+        return;
+      }
+      setError("");
+      setProfileImage(file);
+    }
+  };
+
+  const removeImage = () => {
+    setProfileImage(null);
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -62,14 +83,23 @@ const Login = () => {
     }
 
     try {
-      await api.post("api/user/register/", {
-        username: registerData.username,
-        email: registerData.email,
-        password: registerData.password,
+      const formData = new FormData();
+      formData.append("username", registerData.username);
+      formData.append("email", registerData.email);
+      formData.append("password", registerData.password);
+      if (profileImage) {
+        formData.append("profile_image", profileImage);
+      }
+
+      await api.post("api/user/register/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       setSuccess("Account created successfully! You can now sign in.");
       setRegisterData({ username: '', email: '', password: '', confirmPassword: '' });
+      setProfileImage(null);
     } catch (error) {
       console.error("Registration error:", error);
       if (error.response?.data) {
@@ -285,6 +315,59 @@ const Login = () => {
                       autoComplete="new-password"
                       required
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-image" className="text-gray-300">
+                      Profile Image (Optional)
+                    </Label>
+                    <div className="space-y-2">
+                      {!profileImage ? (
+                        <div className="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center hover:border-purple-500 transition-colors">
+                          <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm text-gray-400 mb-2">
+                            Click to upload a profile image
+                          </p>
+                          <Input
+                            id="profile-image"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById('profile-image').click()}
+                            className="text-sm bg-slate-700/50 border-slate-600 text-gray-300 hover:bg-slate-600"
+                          >
+                            Choose Image
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2 p-2 bg-slate-700/50 rounded-lg">
+                          <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center">
+                            <img 
+                              src={URL.createObjectURL(profileImage)} 
+                              alt="Profile preview" 
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          </div>
+                          <span className="flex-1 text-sm text-gray-300 truncate">
+                            {profileImage.name}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={removeImage}
+                            className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <Button 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Book, Plus, MessageCircle, ArrowLeft, Sparkles } from "lucide-react";
+import { Book, Plus, MessageCircle, ArrowLeft, Sparkles, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -12,6 +12,7 @@ import VideosSection from "@/components/VideosSection";
 import FlashcardsSection from "@/components/FlashcardsSection";
 import ResourcesSection from "@/components/ResourcesSection";
 import { useChat } from "@/hooks/useChat";
+import { useUser } from "@/hooks/useUser";
 
 const Workspace = () => {
   const { id } = useParams();
@@ -21,6 +22,9 @@ const Workspace = () => {
   
   // Get chat functionality for New Chat button
   const { createNewSession, isLoading: isChatLoading } = useChat(id);
+  
+  // Get user information for profile display
+  const { user, getProfileImageUrl, getUserInitials } = useUser();
 
   /**
    * Handle creating a new chat session from header button
@@ -70,6 +74,31 @@ const Workspace = () => {
               workspaceId={id} 
               onSessionChange={() => setActiveTab("chat")}
             />
+            {/* User Profile */}
+            <div className="flex items-center space-x-3 pl-4 border-l border-gray-200/50">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                  {getProfileImageUrl() ? (
+                    <img 
+                      src={getProfileImageUrl()} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">
+                        {getUserInitials()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {user && (
+                  <span className="text-sm font-medium text-gray-700">
+                    {user.username}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -98,88 +127,52 @@ const Workspace = () => {
                 <span className="font-medium">AI Chat</span>
               </button>
               
-              <div className="pt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Notes</h3>
-                  <Button
-                    onClick={() => setActiveTab("notes")}
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 hover:bg-indigo-100 rounded-lg"
-                  >
-                    <Plus className="h-3 w-3 text-indigo-600" />
-                  </Button>
-                </div>
-              </div>
+              <button
+                onClick={() => setActiveTab("notes")}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 mt-4 ${
+                  activeTab === "notes" 
+                    ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 shadow-md" 
+                    : "hover:bg-white/70 text-gray-700"
+                }`}
+              >
+                <span className="font-medium">Notes</span>
+              </button>
 
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Videos</h3>
-                  <Button
-                    onClick={() => setActiveTab("videos")}
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 hover:bg-indigo-100 rounded-lg"
-                  >
-                    <Plus className="h-3 w-3 text-indigo-600" />
-                  </Button>
-                </div>
-              </div>
+              <button
+                onClick={() => setActiveTab("videos")}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                  activeTab === "videos" 
+                    ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 shadow-md" 
+                    : "hover:bg-white/70 text-gray-700"
+                }`}
+              >
+                <span className="font-medium">Videos</span>
+              </button>
 
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Flashcards</h3>
-                  <Button
-                    onClick={() => setActiveTab("flashcards")}
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 hover:bg-indigo-100 rounded-lg"
-                  >
-                    <Plus className="h-3 w-3 text-indigo-600" />
-                  </Button>
-                </div>
-              </div>
+              <button
+                onClick={() => setActiveTab("flashcards")}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                  activeTab === "flashcards" 
+                    ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 shadow-md" 
+                    : "hover:bg-white/70 text-gray-700"
+                }`}
+              >
+                <span className="font-medium">Flashcards</span>
+              </button>
 
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Resources</h3>
-                  <Button
-                    onClick={() => setActiveTab("resources")}
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 hover:bg-indigo-100 rounded-lg"
-                  >
-                    <Plus className="h-3 w-3 text-indigo-600" />
-                  </Button>
-                </div>
-              </div>
+              <button
+                onClick={() => setActiveTab("resources")}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                  activeTab === "resources" 
+                    ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 shadow-md" 
+                    : "hover:bg-white/70 text-gray-700"
+                }`}
+              >
+                <span className="font-medium">Resources</span>
+              </button>
             </nav>
           </div>
 
-          {/* Quick Actions */}
-          <div className="absolute bottom-6 left-4 right-4 space-y-3">
-            <Button
-              onClick={() => setActiveTab("notes")}
-              className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:from-gray-700 hover:to-gray-800 text-sm h-10 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Notes
-            </Button>
-            <Button
-              onClick={() => setActiveTab("videos")}
-              className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:from-gray-700 hover:to-gray-800 text-sm h-10 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Videos
-            </Button>
-            <Button
-              onClick={() => setActiveTab("resources")}
-              className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:from-gray-700 hover:to-gray-800 text-sm h-10 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Slides
-            </Button>
-          </div>
         </aside>
 
         {/* Main Content */}

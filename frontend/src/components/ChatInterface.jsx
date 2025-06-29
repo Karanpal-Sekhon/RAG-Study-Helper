@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Send, Sparkles, AlertCircle, Loader2 } from "lucide-react";
+import { Send, Sparkles, AlertCircle, Loader2, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useChat } from "@/hooks/useChat";
+import { useUser } from "@/hooks/useUser";
 
 /**
  * ChatInterface Component
@@ -32,6 +33,9 @@ const ChatInterface = ({ workspaceId }) => {
     sendMessage,
     clearError
   } = useChat(workspaceId);
+
+  // Get user information for profile display
+  const { user, getProfileImageUrl, getUserInitials } = useUser();
 
   /**
    * Handle sending a new message
@@ -75,31 +79,55 @@ const ChatInterface = ({ workspaceId }) => {
    * Format timestamp for display
    */
   const formatTimestamp = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+    if (!timestamp) return '';
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } catch (error) {
+      console.error('Error formatting timestamp:', error);
+      return '';
+    }
   };
 
   /**
-   * Get avatar and styling for message sender
+   * Render user avatar
    */
-  const getMessageSenderInfo = (sender, agentType) => {
-    if (sender === 'user') {
-      return {
-        avatar: 'U',
-        bgClass: 'bg-white/20',
-        messageClass: 'ml-auto bg-gradient-to-r from-indigo-500 to-purple-500 text-white'
-      };
-    }
-    
-    // AI message - show agent type if available
-    const agentDisplay = agentType || 'AI';
-    return {
-      avatar: agentDisplay.charAt(0).toUpperCase(),
-      bgClass: 'bg-gradient-to-br from-indigo-600 to-purple-600',
-      messageClass: 'mr-auto bg-white/80 backdrop-blur-sm'
-    };
+  const renderUserAvatar = () => {
+    const profileImageUrl = getProfileImageUrl();
+    const initials = getUserInitials();
+
+    return (
+      <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+        {profileImageUrl ? (
+          <img 
+            src={profileImageUrl} 
+            alt="User" 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+            <span className="text-white text-sm font-semibold">
+              {initials}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /**
+   * Render AI avatar
+   */
+  const renderAIAvatar = (agentType) => {
+    return (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center flex-shrink-0">
+        <Bot className="h-5 w-5 text-white" />
+      </div>
+    );
   };
 
   // Show loading state while sessions are being loaded
@@ -147,9 +175,9 @@ const ChatInterface = ({ workspaceId }) => {
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-auto mb-6 space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto mb-6 px-2" style={{ scrollbarWidth: 'thin' }}>
         {!currentSession || messages.length === 0 ? (
-          <div className="text-center mt-20">
+          <div className="flex flex-col items-center justify-center h-full">
             <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Sparkles className="h-8 w-8 text-indigo-600" />
             </div>
@@ -183,63 +211,73 @@ const ChatInterface = ({ workspaceId }) => {
             )}
           </div>
         ) : (
-          messages.map((message) => {
-            const senderInfo = getMessageSenderInfo(message.sender, message.agent_type);
-            
-            return (
-              <Card key={message.id} className={`max-w-3xl shadow-lg border-0 ${senderInfo.messageClass}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${senderInfo.bgClass}`}>
-                      {senderInfo.avatar}
+          <div className="space-y-6">
+            {messages.map((message) => {
+              const isUser = message.sender === 'user';
+              
+              return (
+                <div key={message.id} className="w-full">
+                  {/* Message Row */}
+                  <div className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      {isUser ? renderUserAvatar() : renderAIAvatar(message.agent_type)}
                     </div>
-                    <div className="flex-1">
-                      <p className={message.sender === "user" ? "text-white" : "text-gray-900"}>
-                        {message.content}
-                      </p>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className={`text-xs ${
-                          message.sender === "user" ? "text-white/70" : "text-gray-500"
-                        }`}>
+                    
+                    {/* Message Content */}
+                    <div className={`flex-1 max-w-[80%] ${isUser ? 'text-right' : 'text-left'}`}>
+                      <div className={`inline-block px-4 py-3 rounded-2xl ${
+                        isUser 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-100 text-gray-900'
+                      }`}>
+                        <p className="text-sm leading-relaxed break-words">
+                          {message.content}
+                        </p>
+                      </div>
+                      
+                      {/* Timestamp and Agent Type */}
+                      <div className={`mt-1 flex items-center gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                        <p className="text-xs text-gray-500">
                           {formatTimestamp(message.timestamp)}
                         </p>
-                        {message.agent_type && message.sender !== 'user' && (
-                          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                        {message.agent_type && !isUser && (
+                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
                             {message.agent_type}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {/* Loading indicator for message sending */}
         {isSending && (
-          <Card className="max-w-3xl mr-auto bg-white/80 backdrop-blur-sm shadow-lg border-0">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-                  AI
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+          <div className="w-full mt-6">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                {renderAIAvatar()}
+              </div>
+              <div className="flex-1 max-w-[80%] text-left">
+                <div className="inline-block px-4 py-3 rounded-2xl bg-gray-100 text-gray-900">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    </div>
+                    <span className="text-sm text-gray-600">AI is thinking...</span>
                   </div>
-                  <span className="text-sm text-gray-600">AI is thinking...</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
-
-      {/* Message Input */}
       <div className="flex space-x-3">
         <Input
           value={inputMessage}
