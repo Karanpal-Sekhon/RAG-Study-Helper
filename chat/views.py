@@ -172,6 +172,15 @@ class ChatMessageView(APIView):
             is_user_message=True
         )
         
+        # Auto-generate session title from first user message if still "New Chat"
+        if session.title == "New Chat" and session.messages.count() == 1:
+            # Generate title from first 50 characters of the message
+            title_content = message_content.strip()
+            if len(title_content) > 50:
+                title_content = title_content[:47] + "..."
+            session.title = title_content
+            session.save()
+        
         try:
             # Process the message through the multi-agent system
             # Create the initial state with the user message and context

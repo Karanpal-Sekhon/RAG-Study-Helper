@@ -5,10 +5,17 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     """
     Serializer for ChatMessage model - handles individual messages
     """
+    sender = serializers.SerializerMethodField()
+    timestamp = serializers.DateTimeField(source='created_at', read_only=True)
+    
     class Meta:
         model = ChatMessage
-        fields = ['id', 'content', 'is_user_message', 'agent_type', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = ['id', 'content', 'sender', 'agent_type', 'timestamp', 'is_user_message']
+        read_only_fields = ['id', 'timestamp']
+    
+    def get_sender(self, obj):
+        """Return 'user' or 'assistant' based on is_user_message"""
+        return 'user' if obj.is_user_message else 'assistant'
 
 class ChatSessionListSerializer(serializers.ModelSerializer):
     """

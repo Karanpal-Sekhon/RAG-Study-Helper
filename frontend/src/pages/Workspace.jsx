@@ -20,8 +20,9 @@ const Workspace = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("chat");
   
-  // Get chat functionality for New Chat button
-  const { createNewSession, isLoading: isChatLoading } = useChat(id);
+  // Get chat functionality - single source of truth for all child components
+  const chatState = useChat(id);
+  const { createNewSession, isLoading: isChatLoading } = chatState;
   
   // Get user information for profile display
   const { user, getProfileImageUrl, getUserInitials } = useUser();
@@ -72,6 +73,7 @@ const Workspace = () => {
             </Button>
             <ChatSessionSelector 
               workspaceId={id} 
+              chatState={chatState}
               onSessionChange={() => setActiveTab("chat")}
             />
             {/* User Profile */}
@@ -179,7 +181,7 @@ const Workspace = () => {
         <main className="flex-1 p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="chat">
-              <ChatInterface workspaceId={id || "1"} />
+              <ChatInterface workspaceId={id || "1"} chatState={chatState} />
             </TabsContent>
             
             <TabsContent value="notes">

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useChat } from "@/hooks/useChat";
 import { useUser } from "@/hooks/useUser";
 
 /**
@@ -15,11 +14,12 @@ import { useUser } from "@/hooks/useUser";
  * 
  * @param {object} props
  * @param {string} props.workspaceId - UUID of the workspace
+ * @param {object} props.chatState - Shared chat state from parent component
  */
-const ChatInterface = ({ workspaceId }) => {
+const ChatInterface = ({ workspaceId, chatState }) => {
   const [inputMessage, setInputMessage] = useState("");
   
-  // Use our custom chat hook for all chat functionality
+  // Use shared chat state from parent component
   const {
     sessions,
     currentSession,
@@ -32,7 +32,7 @@ const ChatInterface = ({ workspaceId }) => {
     selectSession,
     sendMessage,
     clearError
-  } = useChat(workspaceId);
+  } = chatState;
 
   // Get user information for profile display
   const { user, getProfileImageUrl, getUserInitials } = useUser();
@@ -101,20 +101,20 @@ const ChatInterface = ({ workspaceId }) => {
     const initials = getUserInitials();
 
     return (
-      <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
-        {profileImageUrl ? (
-          <img 
-            src={profileImageUrl} 
-            alt="User" 
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-            <span className="text-white text-sm font-semibold">
-              {initials}
-            </span>
-          </div>
-        )}
+      <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+      {profileImageUrl ? (
+        <img 
+        src={profileImageUrl} 
+        alt="User" 
+        className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+        <span className="text-white text-base font-semibold">
+          {initials}
+        </span>
+        </div>
+      )}
       </div>
     );
   };

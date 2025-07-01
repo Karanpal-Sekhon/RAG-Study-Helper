@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useChat } from "@/hooks/useChat";
 
 /**
  * ChatSessionSelector Component
@@ -8,10 +7,11 @@ import { useChat } from "@/hooks/useChat";
  * 
  * @param {object} props
  * @param {string} props.workspaceId - UUID of the workspace
+ * @param {object} props.chatState - Shared chat state from parent component
  * @param {function} props.onSessionChange - Callback when session changes
  */
-const ChatSessionSelector = ({ workspaceId, onSessionChange }) => {
-  const { sessions, currentSession, selectSession, isLoadingSessions } = useChat(workspaceId);
+const ChatSessionSelector = ({ workspaceId, chatState, onSessionChange }) => {
+  const { sessions, currentSession, selectSession, isLoadingSessions } = chatState;
   
   const handleSessionChange = async (event) => {
     const sessionId = event.target.value;
