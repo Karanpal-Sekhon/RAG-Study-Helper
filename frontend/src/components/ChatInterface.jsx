@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, Sparkles, AlertCircle, Loader2, Bot, User } from "lucide-react";
+import { Send, Sparkles, AlertCircle, Loader2, Bot, User, Trash2, Edit3, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,9 @@ import { useUser } from "@/hooks/useUser";
  */
 const ChatInterface = ({ workspaceId, chatState }) => {
   const [inputMessage, setInputMessage] = useState("");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitleValue, setEditTitleValue] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Use shared chat state from parent component
   const {
@@ -31,6 +34,8 @@ const ChatInterface = ({ workspaceId, chatState }) => {
     createNewSession,
     selectSession,
     sendMessage,
+    updateSession,
+    deleteSession,
     clearError
   } = chatState;
 
@@ -72,6 +77,75 @@ const ChatInterface = ({ workspaceId, chatState }) => {
       await createNewSession();
     } catch (err) {
       // Error handled by hook
+    }
+  };
+
+  /**
+   * Handle starting title edit mode
+   */
+  const handleStartEditTitle = () => {
+    if (currentSession) {
+      setEditTitleValue(currentSession.title);
+      setIsEditingTitle(true);
+    }
+  };
+
+  /**
+   * Handle saving title changes
+   */
+  const handleSaveTitle = async () => {
+    if (!currentSession || !editTitleValue.trim()) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    try {
+      await updateSession(currentSession.id, editTitleValue.trim());
+      setIsEditingTitle(false);
+    } catch (err) {
+      // Error handled by hook
+      setEditTitleValue(currentSession.title); // Reset to original
+    }
+  };
+
+  /**
+   * Handle canceling title edit
+   */
+  const handleCancelEditTitle = () => {
+    setIsEditingTitle(false);
+    setEditTitleValue(currentSession?.title || "");
+  };
+
+  /**
+   * Handle title input key press
+   */
+  const handleTitleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSaveTitle();
+    } else if (e.key === "Escape") {
+      handleCancelEditTitle();
+    }
+  };
+
+  /**
+   * Handle session deletion with confirmation
+   */
+  const handleDeleteSession = async () => {
+    if (!currentSession) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${currentSession.title}"? This action cannot be undone.`
+    );
+
+    if (confirmed) {
+      setIsDeleting(true);
+      try {
+        await deleteSession(currentSession.id);
+      } catch (err) {
+        // Error handled by hook
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -167,10 +241,75 @@ const ChatInterface = ({ workspaceId, chatState }) => {
       {/* Session Info */}
       {currentSession && (
         <div className="mb-4 p-3 bg-white/60 rounded-lg border border-gray-200/50">
-          <p className="text-sm font-medium text-gray-900">{currentSession.title}</p>
-          <p className="text-xs text-gray-500">
-            Session: {currentSession.id.slice(0, 8)}...
-          </p>
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              {isEditingTitle ? (
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={editTitleValue}
+                    onChange={(e) => setEditTitleValue(e.target.value)}
+                    onKeyPress={handleTitleKeyPress}
+                    onBlur={handleSaveTitle}
+                    className="text-sm font-medium bg-white border-gray-300 focus:border-indigo-500 h-8"
+                    autoFocus
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleSaveTitle}
+                    className="h-8 w-8 p-0 hover:bg-green-100"
+                  >
+                    <Check className="h-4 w-4 text-green-600" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelEditTitle}
+                    className="h-8 w-8 p-0 hover:bg-red-100"
+                  >
+                    <X className="h-4 w-4 text-red-600" />
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm font-medium text-gray-900 truncate pr-2">
+                    {currentSession.title}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Session: {currentSession.id.slice(0, 8)}...
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {!isEditingTitle && (
+              <div className="flex items-center space-x-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleStartEditTitle}
+                  className="h-8 w-8 p-0 hover:bg-blue-100"
+                  title="Rename session"
+                >
+                  <Edit3 className="h-4 w-4 text-blue-600" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleDeleteSession}
+                  disabled={isDeleting}
+                  className="h-8 w-8 p-0 hover:bg-red-100"
+                  title="Delete session"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="h-4 w-4 text-red-600 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

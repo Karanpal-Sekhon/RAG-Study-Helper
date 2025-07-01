@@ -4,7 +4,8 @@ import {
   createChatSession, 
   getChatSessionDetails, 
   sendChatMessage,
-  deleteChatSession 
+  deleteChatSession,
+  updateChatSession 
 } from '../api';
 
 /**
@@ -138,6 +139,40 @@ export const useChat = (workspaceId) => {
   };
 
   /**
+   * Update a chat session (e.g., change title)
+   * 
+   * @param {string} sessionId - UUID of the session to update
+   * @param {string} newTitle - New title for the session
+   */
+  const updateSession = async (sessionId, newTitle) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await updateChatSession(workspaceId, sessionId, newTitle);
+      const updatedSession = response.data;
+      
+      // Update sessions list
+      setSessions(prev => prev.map(session => 
+        session.id === sessionId ? { ...session, title: updatedSession.title } : session
+      ));
+      
+      // Update current session if it's the one being updated
+      if (currentSession && currentSession.id === sessionId) {
+        setCurrentSession(prev => ({ ...prev, title: updatedSession.title }));
+      }
+      
+      return updatedSession;
+    } catch (err) {
+      console.error('Error updating session:', err);
+      setError('Failed to update session');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
    * Delete a chat session
    * 
    * @param {string} sessionId - UUID of the session to delete
@@ -199,6 +234,7 @@ export const useChat = (workspaceId) => {
     createNewSession,
     selectSession,
     sendMessage,
+    updateSession,
     deleteSession,
     clearError
   };
