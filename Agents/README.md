@@ -55,8 +55,9 @@ The RAG-Study-Helper uses a multi-agent architecture with a central orchestrator
 - **Implementation**: `*_agent_manager.py` (e.g., `rag_agent_manager.py`)
 - **Key Functions**:
   - `get_agent`: Creates or retrieves a cached agent instance
-  - `get_document_paths`: Retrieves document paths for a specific workspace
+  - `get_workspace_document_count`: Retrieves document count for validation
   - `clear_agent_cache`: Manages the agent instance cache
+  - `refresh_agent_for_workspace`: Force refresh cached agent when documents change
 
 ### Agent Instances
 - **Purpose**: Execute specialized tasks like QA, flashcard generation, etc.
@@ -76,12 +77,12 @@ The architecture supports multi-workspace environments through:
 ## Agent Types
 
 Currently implemented:
-- **RAG QA Agent**: Answers questions about documents using Retrieval-Augmented Generation
+- **RAG QA Agent**: Answers questions about documents using Retrieval-Augmented Generation with LangGraph workflow
 
-Planned:
-- **Flashcard Agent**: Generates flashcards from notes
-- **Exam Agent**: Creates practice exams from notes
-- **Resource Agent**: Recommends additional learning resources
+Placeholder implementations in multi-agent system:
+- **Flashcard Agent**: Generates flashcards from notes (basic implementation)
+- **Exam Agent**: Creates practice exams from notes (basic implementation)
+- **Resource Agent**: Recommends additional learning resources (basic implementation)
 
 ## Extension Pattern
 
@@ -111,12 +112,49 @@ def flashcard_node(state):
     # Implementation
 ```
 
+## File Structure
+
+```
+Agents/
+├── README.md                   # This file
+├── base_agent.py              # Abstract base class for all agents
+├── agent_factory.py           # Factory for creating/managing agents
+├── multi-agent.py             # Multi-agent orchestrator with LangGraph
+├── rag-qa-agent.py            # RAG QA agent implementation
+├── rag_agent_manager.py       # RAG agent instance manager
+├── test_retriever.py          # Testing utilities for retriever
+└── agent_template/            # Templates for new agent types
+    ├── README.md
+    ├── agent_implementation.py
+    └── agent_manager.py
+```
+
+## Key Features
+
+- **Workspace-aware**: All agents support workspace-specific contexts
+- **Caching**: Agents are cached per workspace for performance
+- **LangGraph Integration**: RAG QA agent uses LangGraph for advanced workflows
+- **Extensible**: Template-based system for adding new agent types
+- **Vector Store Integration**: RAG agents integrate with workspace vector stores
+
+## RAG QA Agent Workflow
+
+The RAG QA agent uses a sophisticated LangGraph workflow with the following nodes:
+
+1. **Agent Node**: Determines if retrieval is needed and invokes retriever tool
+2. **Retrieve Node**: Searches workspace documents using vector similarity
+3. **Grade Documents Node**: Evaluates if retrieved documents are relevant
+4. **Generate Node**: Creates final answer using retrieved context
+5. **Rewrite Node**: Reformulates query if documents aren't relevant
+
+The workflow includes feedback loops for query refinement and ensures high-quality responses by validating document relevance before generating answers.
+
 ## Workflow Example
 
 1. User sends a query: "What is the architecture of an encoder-decoder model?"
-2. Preprocessing node formats the query
-3. Delegation node routes to the RAG QA agent
+2. Preprocessing node formats the query and extracts workspace context
+3. Delegation node routes to the RAG QA agent based on query type
 4. Multi-agent system requests a RAG QA agent from the factory
-5. Factory uses the manager to get or create an agent instance
-6. Agent processes the query and returns a response
+5. Factory uses the manager to get or create a cached agent instance
+6. RAG agent runs its LangGraph workflow (retrieval → grading → generation)
 7. Response is formatted and returned to the user
